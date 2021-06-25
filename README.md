@@ -1,9 +1,10 @@
 # EntryLib
 
-EntryLib 是一个基于 Mirai-Console 的插件，用于实现群词条、自定义回复或更多功能。
+EntryLib 是一个基于 [Mirai-Console](https://github.com/mamoe/mirai-console) 的插件，用于实现群词条、自定义回复或更多功能。
 
 # 注意[Working In Progress]
-**项目仍在开发中**  
+## 项目仍在开发中
+
 开发模块：
 - [x] Mirai通信
 - [ ] 指令模块
