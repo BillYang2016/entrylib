@@ -1,20 +1,26 @@
-# mirai_plugin_example
-![Github](https://img.shields.io/badge/Author-Nambers-blue) ![GitHub](https://img.shields.io/github/license/Nambers/mirai_kotlin_example) ![GitHub repo size](https://img.shields.io/github/repo-size/Nambers/mirai_kotlin_example) ![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/Nambers/mirai_kotlin_example) ![GitHub last commit](https://img.shields.io/github/last-commit/Nambers/mirai_kotlin_example)
+# EntryLib
 
-a simple example of mirai using kotlin and java
+EntryLib 是一个基于 Mirai-Console 的插件，用于实现群词条、自定义回复或更多功能。
 
-一个简易的mirai(mirai-console)框架应用 包含kotlin或java版(在 `/src/main/java` 或 `/src/main/kotlin`目录下)
+# 声明
+## 可用console版本
+
+- 0.5.2
+- 1.0
+- 2.0
+- 2.7-M1
 
 # 使用方法
 
-## 1. clone或下载本项目全部东西，可以不用下release
+# 基本指令列表
 
-## 2.更改gradle依赖到最新版
+## "学习#[词条名]#[词条内容/回复项]"
+学习一个新的词条，记入数据库中
+## "查看#[词条名]"
+查看词条内容
+## "历史#[词条名]"
+查看词条修改历史
+## "搜索#[关键字]"
+搜索包含关键字的词条名
 
-依赖版本地址需自己按照[这里的最新版更改](https://bintray.com/him188moe/mirai/mirai-console/)或[这里](https://github.com/mamoe/mirai-console/blob/master/docs/ConfiguringProjects.md)，更改地址:build.gradle.kts下
-
-![更改地址](https://img-blog.csdnimg.cn/20210120155108568.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQwODMyOTYw,size_16,color_FFFFFF,t_70)
-
-c++版(重构完成) <https://github.com/Nambers/MiraiCP>
-
-可直接用idea打开本文件夹来打开项目
+# 配置项
