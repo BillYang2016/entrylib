@@ -3,7 +3,10 @@
 EntryLib 是一个基于 [Mirai-Console](https://github.com/mamoe/mirai-console) 的插件，用于实现群词条、自定义回复或更多功能。
 
 # 注意[Working In Progress]
+
 ## 项目仍在开发中
+
+**目前版本：0.1.1**
 
 开发模块：
 - [x] Mirai通信
@@ -13,6 +16,7 @@ EntryLib 是一个基于 [Mirai-Console](https://github.com/mamoe/mirai-console)
 - [ ] 语义分析
 
 # 声明
+
 ## 可用console版本
 
 - 0.5.2
@@ -34,3 +38,8 @@ EntryLib 是一个基于 [Mirai-Console](https://github.com/mamoe/mirai-console)
 搜索包含关键字的词条名
 
 # 配置项
+
+# 插件依赖
+本插件依赖于以下模块：
+- mirai-console
+- sqlite-jdbc

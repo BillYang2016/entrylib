@@ -20,7 +20,7 @@ build.gradle.kts里改依赖库和插件版本
 public final class JavaPluginMain extends JavaPlugin {
     public static final JavaPluginMain INSTANCE = new JavaPluginMain();
     private JavaPluginMain() {
-        super(new JvmPluginDescriptionBuilder("com.billyang.entrylib", "0.1.0")
+        super(new JvmPluginDescriptionBuilder("com.billyang.entrylib", "0.1.1")
                 .info("Ask and replay plugin for Mirai-Console")
                 .author("Bill Yang")
                 .build());
@@ -32,15 +32,20 @@ public final class JavaPluginMain extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        getLogger().info("词条插件已加载完成！");
 
         commands.put("学习","learn"); //学习类命令
         commands.put("查看","view"); //查看类命令
         commands.put("历史","history"); //历史类命令
         commands.put("搜索","search"); //搜索类命令
 
-        db.init(); //初始化数据库
+        if(!db.init()) { //初始化数据库
+            getLogger().error("无法加载数据库，请检查数据库是否损坏？");
+            getLogger().error("插件无法正常运行，将停止加载。");
+            return;
+        }
         ml.init(db); //初始化匹配器
+
+        getLogger().info("词条插件已加载完成！");
 
         GlobalEventChannel.INSTANCE.subscribeAlways(GroupMessageEvent.class, g -> {
             //监听群消息
@@ -71,10 +76,14 @@ public final class JavaPluginMain extends JavaPlugin {
                     else if(stype == "正则") type = 2;
                 }
 
-                boolean status = db.insert(title,content,type); //向数据库插入
+                StringBuilder ErrorInfo = new StringBuilder();
+                boolean status = db.insert(g.getGroup().getId(),title,content,type,ErrorInfo); //向数据库插入
 
                 if(status == true)g.getGroup().sendMessage("已更新" + title + "词条！");
-                else g.getGroup().sendMessage("更新" + title + "词条失败！");
+                else {
+                    g.getGroup().sendMessage("更新" + title + "词条失败！");
+                    getLogger().warning(String.valueOf(ErrorInfo));
+                }
 
             } else if(command == "view") { //查看类命令
 

@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "com.billyang"
-version = "0.1.0"
+version = "0.1.1"
 
 repositories {
     maven{ url =uri("https://maven.aliyun.com/nexus/content/groups/public/")}
@@ -17,4 +17,5 @@ repositories {
 dependencies{
     //在IDE内运行的mcl添加滑块模块，请参考https://github.com/project-mirai/mirai-login-solver-selenium把版本更新为最新
     //runtimeOnly("net.mamoe:mirai-login-solver-selenium:1.0-dev-15")
+    implementation(fileTree(mapOf("dir" to "lib", "include" to listOf("*.jar"))))
 }
