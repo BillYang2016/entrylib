@@ -20,7 +20,7 @@ build.gradle.kts里改依赖库和插件版本
 public final class JavaPluginMain extends JavaPlugin {
     public static final JavaPluginMain INSTANCE = new JavaPluginMain();
     private JavaPluginMain() {
-        super(new JvmPluginDescriptionBuilder("com.billyang.entrylib", "0.1.1")
+        super(new JvmPluginDescriptionBuilder("com.billyang.entrylib", "0.1.2")
                 .info("Ask and replay plugin for Mirai-Console")
                 .author("Bill Yang")
                 .build());
@@ -71,9 +71,10 @@ public final class JavaPluginMain extends JavaPlugin {
 
                 if(splited_msg.length > 3) {
                     String stype = splited_msg[3];
-                    if(stype == "精准") type = 0;
-                    else if(stype == "模糊") type = 1;
-                    else if(stype == "正则") type = 2;
+
+                    if(stype.contains("精准")) type = 0;
+                    else if(stype.contains("模糊")) type = 1;
+                    else if(stype.contains("正则")) type = 2;
                 }
 
                 StringBuilder ErrorInfo = new StringBuilder();
@@ -88,32 +89,66 @@ public final class JavaPluginMain extends JavaPlugin {
             } else if(command == "view") { //查看类命令
 
                 String title = splited_msg[1]; //词条名
-                title = ml.match(title); //标准化词条名
+                StringBuilder ErrorInfo = new StringBuilder(); //错误信息
 
-                if(title == null) { //未找到
+                MatchValue mv = ml.match(g.getGroup().getId(),title,ErrorInfo);
+                int id = mv.id; //获取匹配到的词条id
+                int type = mv.type; //获取匹配到的匹配方式
 
+                if(id < 0) { //未找到
+                    g.getGroup().sendMessage("未找到与" + title + "相关的词条");
+                    getLogger().warning(String.valueOf(ErrorInfo));
                 } else {
-                    String content = db.query(title);
-                    g.getGroup().sendMessage(title + "的内容如下：\n--------\n"+content);
+                    ErrorInfo = new StringBuilder();
+                    String content = db.query(g.getGroup().getId(),id,ErrorInfo);
+
+                    if(content == null) {
+                        g.getGroup().sendMessage("出错啦！");
+                        getLogger().warning(String.valueOf(ErrorInfo));
+                    } else {
+                        if(type != 2)g.getGroup().sendMessage(title + "的内容如下：\n--------\n" + content);
+                        else { //处理正则替换内容
+                            ErrorInfo = new StringBuilder();
+
+                            RegularReplace rr = new RegularReplace(id,mv.title,splited_msg[1],content);
+                            content = rr.replace(ErrorInfo); //正则替换
+
+                            if(content != null)g.getGroup().sendMessage(title + "的内容如下：\n--------\n" + content);
+                            else {
+                                g.getGroup().sendMessage("出错啦！");
+                                getLogger().warning(String.valueOf(ErrorInfo));
+                            }
+                        }
+                    }
                 }
 
             } else if(command == "history") { //历史类命令
 
                 String title = splited_msg[1]; //词条名
-                title = ml.match(title); //标准化词条名
+                StringBuilder ErrorInfo = new StringBuilder(); //错误信息
 
-                if(title == null) { //未找到
+                MatchValue mv = ml.match(g.getGroup().getId(),title,ErrorInfo);
+                int id = mv.id; //获取匹配到的词条id
+                int type = mv.type; //获取匹配到的匹配方式
 
+                if(id < 0) { //未找到
+                    g.getGroup().sendMessage("未找到与" + title + "相关的词条");
+                    getLogger().warning(String.valueOf(ErrorInfo));
                 } else {
-                    String content = db.history(title);
-                    g.getGroup().sendMessage(title + "的历史情况如下：\n--------\n"+content);
+                    ErrorInfo = new StringBuilder();
+                    String content = db.history(g.getGroup().getId(),id,ErrorInfo);
+
+                    if(content == null) {
+                        g.getGroup().sendMessage("出错啦！");
+                        getLogger().warning(String.valueOf(ErrorInfo));
+                    } else g.getGroup().sendMessage(title + "的历史情况如下：\n--------\n" + content);
                 }
 
             } else if(command == "search") { //搜索类命令
 
                 String keyword = splited_msg[1]; //关键词
                 String reply = ml.search(keyword); //标准化词条名
-                g.getGroup().sendMessage("搜索到如下词条：\n--------\n"+reply);
+                g.getGroup().sendMessage("搜索到如下词条：\n--------\n" + reply);
 
             }
 

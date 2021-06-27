@@ -1,11 +1,5 @@
 package com.billyang.entrylib;
 
-import net.mamoe.mirai.console.plugin.jvm.JavaPlugin;
-import net.mamoe.mirai.console.plugin.jvm.JvmPluginDescriptionBuilder;
-import net.mamoe.mirai.event.GlobalEventChannel;
-import net.mamoe.mirai.event.events.FriendMessageEvent;
-import net.mamoe.mirai.event.events.GroupMessageEvent;
-
 import java.io.File;
 import java.sql.*;
 
@@ -99,9 +93,9 @@ public class Database {
             stmt.executeUpdate(sql); //主表添加索引
 
             sql = "CREATE TABLE TABLE_" + length +
-                  "(ID         INT            PRIMARY KEY NOT NULL," +                                  //版本号
-                  " CONTENT    nvarchar(1000) ," +                                             //内容
-                  " TS         TIMESTAMP      NOT NULL DEFAULT (datetime('now','localtime')))" //时间
+                  "(ID         INT            PRIMARY KEY NOT NULL," +                          //版本号
+                  " CONTENT    nvarchar(1000) ," +                                              //内容
+                  " TS         TIMESTAMP      NOT NULL DEFAULT (datetime('now','localtime')))"  //时间
             ;
             stmt.executeUpdate(sql); //创建新表
 
@@ -112,7 +106,7 @@ public class Database {
         return true;
     }
 
-    boolean insert(long groupid,String title,String content,int type,StringBuilder ErrorInfo) {
+    boolean insert(long groupid,String title,String content,int type,StringBuilder ErrorInfo) { //向title词条插入新内容content，返回错误信息ErrorInfo
         if(!connect(groupid)) {
             ErrorInfo.append("数据库连接失败！");
             return false;
@@ -131,7 +125,7 @@ public class Database {
             return false;
         }
 
-        String table = "TABLE_"+id;
+        String table = "TABLE_" + id;
         int length = length(table) + 1;
 
         try {
@@ -149,11 +143,35 @@ public class Database {
         return true;
     }
 
-    String query(String title) {
-        return null;
+    String query(long groupid,int id,StringBuilder ErrorInfo) {
+        if(!connect(groupid)) {
+            ErrorInfo.append("数据库连接失败！");
+            return null;
+        }
+
+        String table = "TABLE_" + id;
+        int length = length(table);
+
+        try {
+            String sql = "SELECT * FROM " + table + " WHERE ID=" + length + ";";
+            ResultSet rs = stmt.executeQuery(sql);
+            if(rs.next()) {
+                String content = rs.getString("CONTENT");
+                close();
+                return content;
+            } else {
+                close();
+                ErrorInfo.append("无法在" + table + "词条表中找到最新记录！");
+                return null;
+            }
+        } catch( Exception e ) {
+            close();
+            ErrorInfo.append("无法在" + table + "词条表中查询数据！");
+            return null;
+        }
     }
 
-    String history(String title) {
+    String history(long groupid,int id,StringBuilder ErrorInfo) {
         return null;
     }
 
