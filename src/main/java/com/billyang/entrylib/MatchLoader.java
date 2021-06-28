@@ -1,7 +1,6 @@
 package com.billyang.entrylib;
 
 import java.sql.*;
-import java.util.HashMap;
 import java.util.regex.*;
 
 class MatchValue {
@@ -23,8 +22,8 @@ public class MatchLoader {
         this.db=db;
     }
 
-    MatchValue match(long groupid, String title, StringBuilder ErrorInfo) { //返回title匹配到的词条表id与匹配类型
-        db.connect(groupid);
+    MatchValue match(long groupID, String title) { //返回title匹配到的词条表id与匹配类型
+        db.connect(groupID);
 
         Statement stmt = db.stmt;
 
@@ -44,8 +43,7 @@ public class MatchLoader {
                 return new MatchValue(id, target, 1);
             }
         } catch( Exception e ) {
-            ErrorInfo.append(e.getClass()+":"+e.getMessage());
-            //不作处理
+            e.printStackTrace();
         }
 
         try {
@@ -61,8 +59,7 @@ public class MatchLoader {
                 }
             }
         } catch( Exception e ) {
-            ErrorInfo.append(e.getClass()+":"+e.getMessage());
-            //不作处理
+            e.printStackTrace();
         }
 
         db.close();

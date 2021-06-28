@@ -85,17 +85,15 @@ public final class JavaPluginMain extends JavaPlugin {
             } else if(command.equals("view")) { //查看类命令
 
                 String title = splitedMsg[1]; //词条名
-                StringBuilder ErrorInfo = new StringBuilder(); //错误信息
 
-                MatchValue mv = ml.match(g.getGroup().getId(),title,ErrorInfo);
+                MatchValue mv = ml.match(g.getGroup().getId(),title);
                 int id = mv.id; //获取匹配到的词条id
                 int type = mv.type; //获取匹配到的匹配方式
 
                 if(id < 0) { //未找到
                     g.getGroup().sendMessage(uio.format("view", "exist", title));
-                    getLogger().warning(String.valueOf(ErrorInfo));
                 } else {
-                    ErrorInfo = new StringBuilder();
+                    StringBuilder ErrorInfo = new StringBuilder(); //错误信息
                     String content = db.query(g.getGroup().getId(),id,ErrorInfo);
 
                     if(content == null) {
@@ -121,17 +119,15 @@ public final class JavaPluginMain extends JavaPlugin {
             } else if(command.equals("history")) { //历史类命令
 
                 String title = splitedMsg[1]; //词条名
-                StringBuilder ErrorInfo = new StringBuilder(); //错误信息
 
-                MatchValue mv = ml.match(g.getGroup().getId(),title,ErrorInfo);
+                MatchValue mv = ml.match(g.getGroup().getId(),title);
                 int id = mv.id; //获取匹配到的词条id
                 int type = mv.type; //获取匹配到的匹配方式
 
                 if(id < 0) { //未找到
                     g.getGroup().sendMessage(uio.format("history", "exist", title));
-                    getLogger().warning(String.valueOf(ErrorInfo));
                 } else {
-                    ErrorInfo = new StringBuilder();
+                    StringBuilder ErrorInfo = new StringBuilder(); //错误信息
                     String content = db.history(g.getGroup().getId(),id,ErrorInfo);
 
                     if(content == null) {

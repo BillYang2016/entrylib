@@ -29,10 +29,10 @@ public class Database {
     Connection c = null;
     Statement stmt = null;
 
-    boolean connect(long groupid) { //连接群数据库
+    boolean connect(long groupId) { //连接群数据库
         try {
             Class.forName("org.sqlite.JDBC");
-            c = DriverManager.getConnection("jdbc:sqlite:data/EntryLib/databases/" + groupid + ".db");
+            c = DriverManager.getConnection("jdbc:sqlite:data/EntryLib/databases/" + groupId + ".db");
 
             stmt = c.createStatement();
             if(!exists(stmt, "__MAIN_TABLE")) { //新数据库，创建主表
@@ -92,7 +92,7 @@ public class Database {
             int length = length("__MAIN_TABLE") + 1;
 
             String sql = "INSERT INTO __MAIN_TABLE (ID,TITLE,MATCH_MODE) " +
-                         "VALUES (" + length + ",'" + title + "'," + type + ");";
+                         "VALUES (" + length + ",'" + title + "'," + type + ");create table __MAIN_TABLE(	ID int,	TITLE int,	MATCH_MODE int);";
             stmt.executeUpdate(sql); //主表添加索引
 
             sql = "CREATE TABLE TABLE_" + length +
@@ -109,8 +109,8 @@ public class Database {
         return true;
     }
 
-    boolean insert(long groupid,String title,String content,int type,StringBuilder ErrorInfo) { //向title词条插入新内容content，返回错误信息ErrorInfo
-        if(!connect(groupid)) {
+    boolean insert(long groupId,String title,String content,int type,StringBuilder ErrorInfo) { //向title词条插入新内容content，返回错误信息ErrorInfo
+        if(!connect(groupId)) {
             ErrorInfo.append("数据库连接失败！");
             return false;
         }
@@ -138,7 +138,7 @@ public class Database {
             stmt.executeUpdate(sql);
         } catch( Exception e ) {
             close();
-            ErrorInfo.append("无法向" + table + "词条表中插入数据！");
+            ErrorInfo.append("无法向").append(table).append("词条表中插入数据！");
             return false;
         }
 
@@ -146,8 +146,8 @@ public class Database {
         return true;
     }
 
-    String query(long groupid,int id,StringBuilder ErrorInfo) {
-        if(!connect(groupid)) {
+    String query(long groupId,int id,StringBuilder ErrorInfo) {
+        if(!connect(groupId)) {
             ErrorInfo.append("数据库连接失败！");
             return null;
         }
@@ -164,17 +164,17 @@ public class Database {
                 return content;
             } else {
                 close();
-                ErrorInfo.append("无法在" + table + "词条表中找到最新记录！");
+                ErrorInfo.append("无法在").append(table).append("词条表中找到最新记录！");
                 return null;
             }
         } catch( Exception e ) {
             close();
-            ErrorInfo.append("无法在" + table + "词条表中查询数据！");
+            ErrorInfo.append("无法在").append(table).append("词条表中查询数据！");
             return null;
         }
     }
 
-    String history(long groupid,int id,StringBuilder ErrorInfo) {
+    String history(long groupId,int id,StringBuilder ErrorInfo) {
         return null;
     }
 
