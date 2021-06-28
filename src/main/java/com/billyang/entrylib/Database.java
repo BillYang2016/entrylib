@@ -92,7 +92,7 @@ public class Database {
             int length = length("__MAIN_TABLE") + 1;
 
             String sql = "INSERT INTO __MAIN_TABLE (ID,TITLE,MATCH_MODE) " +
-                         "VALUES (" + length + ",'" + title + "'," + type + ");create table __MAIN_TABLE(	ID int,	TITLE int,	MATCH_MODE int);";
+                         "VALUES (" + length + ",'" + title + "'," + type + ");";
             stmt.executeUpdate(sql); //主表添加索引
 
             sql = "CREATE TABLE TABLE_" + length +

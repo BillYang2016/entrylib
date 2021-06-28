@@ -33,6 +33,51 @@ public final class JavaPluginMain extends JavaPlugin {
     UserIO uio = new UserIO();
     EnableGroups eg = new EnableGroups();
 
+    void processLearn(GroupMessageEvent g,String title,String content,int type) {
+        StringBuilder ErrorInfo = new StringBuilder();
+        boolean status = db.insert(g.getGroup().getId(),title,content,type,ErrorInfo); //向数据库插入
+
+        if(status)g.getGroup().sendMessage(uio.format(g,"learn", "done", title));
+        else {
+            g.getGroup().sendMessage(uio.format(g,"learn", "fail", title));
+            getLogger().warning(String.valueOf(ErrorInfo));
+        }
+    }
+
+    void processView(GroupMessageEvent g,String title,boolean cancelError) {
+        MatchValue mv = ml.match(g.getGroup().getId(),title);
+        int id = mv.id; //获取匹配到的词条id
+        int type = mv.type; //获取匹配到的匹配方式
+
+        if(id < 0) { //未找到
+            if(!cancelError)g.getGroup().sendMessage(uio.format(g,"view", "exist", title));
+        } else {
+            StringBuilder ErrorInfo = new StringBuilder(); //错误信息
+            String content = db.query(g.getGroup().getId(),id,ErrorInfo);
+
+            if(content == null) {
+                if(!cancelError) {
+                    g.getGroup().sendMessage(uio.format(g,"view", "error", title));
+                    getLogger().warning(String.valueOf(ErrorInfo));
+                }
+            } else {
+                if(type != 2)g.getGroup().sendMessage(uio.format(g,"view", "reply", title,content));
+                else { //处理正则替换内容
+                    ErrorInfo = new StringBuilder();
+
+                    RegularReplace rr = new RegularReplace(id,mv.title,title,content);
+                    content = rr.replace(ErrorInfo); //正则替换
+
+                    if(content != null)g.getGroup().sendMessage(uio.format(g,"view", "reply", title,content));
+                    else if(!cancelError) {
+                        g.getGroup().sendMessage(uio.format(g,"view", "error", title));
+                        getLogger().warning(String.valueOf(ErrorInfo));
+                    }
+                }
+            }
+        }
+    }
+
     @Override
     public void onEnable() {
 
@@ -69,12 +114,22 @@ public final class JavaPluginMain extends JavaPlugin {
 
             if(!eg.check(g.getGroup().getId()))return; //开关未开启，不执行反馈
 
-            String msg=g.getMessage().contentToString();
+            String msg = g.getMessage().contentToString();
 
             String[] splitedMsg = msg.split("#");
 
             if(uio.getViewMode()) { //查询模式为1，忽略命令格式
-                command = "view";
+                if(splitedMsg.length >= 2) { //检查是否构成其他格式
+                    command = uio.parse(splitedMsg[0]);
+                    if(command != null)getLogger().info("Got Input Command: " + command);
+                    else {
+                        processView(g,msg,true);
+                        return;
+                    }
+                } else {
+                    processView(g,msg,true);
+                    return;
+                }
             } else { //查询模式为0，根据Input模块分析命令
 
                 if(splitedMsg.length < 2) return; //不构成命令格式
@@ -86,11 +141,11 @@ public final class JavaPluginMain extends JavaPlugin {
             if(command == null) return; //无对应命令
             else if(command.equals("learn")) { //学习类命令
 
-                if(splitedMsg.length < 3) { //命令格式错误
-                    return;
-                }
+                if(splitedMsg.length < 3)return; //命令格式错误
+
                 String title = splitedMsg[1]; //词条名
                 String content = splitedMsg[2]; //词条内容
+
                 int type = 0; //匹配方式
 
                 if(splitedMsg.length > 3) {
@@ -101,48 +156,11 @@ public final class JavaPluginMain extends JavaPlugin {
                     else if(sType.contains("正则")) type = 2;
                 }
 
-                StringBuilder ErrorInfo = new StringBuilder();
-                boolean status = db.insert(g.getGroup().getId(),title,content,type,ErrorInfo); //向数据库插入
-
-                if(status)g.getGroup().sendMessage(uio.format(g,"learn", "done", title));
-                else {
-                    g.getGroup().sendMessage(uio.format(g,"learn", "fail", title));
-                    getLogger().warning(String.valueOf(ErrorInfo));
-                }
+                processLearn(g,title, content, type);
 
             } else if(command.equals("view")) { //查看类命令
 
-                String title = splitedMsg[1]; //词条名
-
-                MatchValue mv = ml.match(g.getGroup().getId(),title);
-                int id = mv.id; //获取匹配到的词条id
-                int type = mv.type; //获取匹配到的匹配方式
-
-                if(id < 0) { //未找到
-                    g.getGroup().sendMessage(uio.format(g,"view", "exist", title));
-                } else {
-                    StringBuilder ErrorInfo = new StringBuilder(); //错误信息
-                    String content = db.query(g.getGroup().getId(),id,ErrorInfo);
-
-                    if(content == null) {
-                        g.getGroup().sendMessage(uio.format(g,"view", "error", title));
-                        getLogger().warning(String.valueOf(ErrorInfo));
-                    } else {
-                        if(type != 2)g.getGroup().sendMessage(uio.format(g,"view", "reply", title,content));
-                        else { //处理正则替换内容
-                            ErrorInfo = new StringBuilder();
-
-                            RegularReplace rr = new RegularReplace(id,mv.title,splitedMsg[1],content);
-                            content = rr.replace(ErrorInfo); //正则替换
-
-                            if(content != null)g.getGroup().sendMessage(uio.format(g,"view", "reply", title,content));
-                            else {
-                                g.getGroup().sendMessage(uio.format(g,"view", "error", title));
-                                getLogger().warning(String.valueOf(ErrorInfo));
-                            }
-                        }
-                    }
-                }
+                processView(g,splitedMsg[1],false);
 
             } else if(command.equals("history")) { //历史类命令
 

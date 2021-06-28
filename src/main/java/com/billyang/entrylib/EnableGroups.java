@@ -50,7 +50,9 @@ public class EnableGroups { //群开关
         try { //如果表中存在记录，返回记录值
             JSONObject configJson = JSONObject.parseObject(sb.toString());
 
-            return configJson.getBooleanValue(String.valueOf(groupId));
+            String value = configJson.getString(String.valueOf(groupId));
+
+            if(value != null) return Boolean.parseBoolean(value);
         } catch (Exception e) {
             //e.printStackTrace();
             //由于不匹配结果大量，取消异常反馈
