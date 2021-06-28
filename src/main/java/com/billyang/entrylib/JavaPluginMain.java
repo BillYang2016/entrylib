@@ -6,9 +6,6 @@ import net.mamoe.mirai.event.GlobalEventChannel;
 import net.mamoe.mirai.event.events.FriendMessageEvent;
 import net.mamoe.mirai.event.events.GroupMessageEvent;
 
-import java.util.HashMap;
-import java.util.Map;
-
 
 /*
 在settings.gradle.kts里改生成的插件.jar名称
@@ -27,18 +24,12 @@ public final class JavaPluginMain extends JavaPlugin {
                 .build());
     }
 
-    private Map<String,String> commands = new HashMap<>();
     Database db = new Database();
     MatchLoader ml = new MatchLoader();
     UserIO uio = new UserIO();
 
     @Override
     public void onEnable() {
-
-        commands.put("学习","learn"); //学习类命令
-        commands.put("查看","view"); //查看类命令
-        commands.put("历史","history"); //历史类命令
-        commands.put("搜索","search"); //搜索类命令
 
         String DataFolderPath = getDataFolder().getAbsolutePath();
         getLogger().info("配置文件目录：" + DataFolderPath);
@@ -57,42 +48,43 @@ public final class JavaPluginMain extends JavaPlugin {
 
             String msg=g.getMessage().contentToString();
 
-            String[] splited_msg = msg.split("#");
+            String[] splitedMsg = msg.split("#");
 
-            if(splited_msg.length < 2) return; //不构成命令格式
+            if(splitedMsg.length < 2) return; //不构成命令格式
 
-            String command = commands.get(splited_msg[0]);
+            String command = uio.parse(splitedMsg[0]);
+            if(command != null)getLogger().info("Got Input Command: " + command);
 
             if(command == null) return; //无对应命令
-            else if(command == "learn") { //学习类命令
+            else if(command.equals("learn")) { //学习类命令
 
-                if(splited_msg.length < 3) { //命令格式错误
+                if(splitedMsg.length < 3) { //命令格式错误
                     return;
                 }
-                String title = splited_msg[1]; //词条名
-                String content = splited_msg[2]; //词条内容
+                String title = splitedMsg[1]; //词条名
+                String content = splitedMsg[2]; //词条内容
                 int type = 0; //匹配方式
 
-                if(splited_msg.length > 3) {
-                    String stype = splited_msg[3];
+                if(splitedMsg.length > 3) {
+                    String sType = splitedMsg[3];
 
-                    if(stype.contains("精准")) type = 0;
-                    else if(stype.contains("模糊")) type = 1;
-                    else if(stype.contains("正则")) type = 2;
+                    if(sType.contains("精准")) type = 0;
+                    else if(sType.contains("模糊")) type = 1;
+                    else if(sType.contains("正则")) type = 2;
                 }
 
                 StringBuilder ErrorInfo = new StringBuilder();
                 boolean status = db.insert(g.getGroup().getId(),title,content,type,ErrorInfo); //向数据库插入
 
-                if(status == true)g.getGroup().sendMessage(uio.format("learn", "done", title));
+                if(status)g.getGroup().sendMessage(uio.format("learn", "done", title));
                 else {
                     g.getGroup().sendMessage(uio.format("learn", "fail", title));
                     getLogger().warning(String.valueOf(ErrorInfo));
                 }
 
-            } else if(command == "view") { //查看类命令
+            } else if(command.equals("view")) { //查看类命令
 
-                String title = splited_msg[1]; //词条名
+                String title = splitedMsg[1]; //词条名
                 StringBuilder ErrorInfo = new StringBuilder(); //错误信息
 
                 MatchValue mv = ml.match(g.getGroup().getId(),title,ErrorInfo);
@@ -114,7 +106,7 @@ public final class JavaPluginMain extends JavaPlugin {
                         else { //处理正则替换内容
                             ErrorInfo = new StringBuilder();
 
-                            RegularReplace rr = new RegularReplace(id,mv.title,splited_msg[1],content);
+                            RegularReplace rr = new RegularReplace(id,mv.title,splitedMsg[1],content);
                             content = rr.replace(ErrorInfo); //正则替换
 
                             if(content != null)g.getGroup().sendMessage(uio.format("view", "reply", title,content));
@@ -126,9 +118,9 @@ public final class JavaPluginMain extends JavaPlugin {
                     }
                 }
 
-            } else if(command == "history") { //历史类命令
+            } else if(command.equals("history")) { //历史类命令
 
-                String title = splited_msg[1]; //词条名
+                String title = splitedMsg[1]; //词条名
                 StringBuilder ErrorInfo = new StringBuilder(); //错误信息
 
                 MatchValue mv = ml.match(g.getGroup().getId(),title,ErrorInfo);
@@ -148,9 +140,9 @@ public final class JavaPluginMain extends JavaPlugin {
                     } else g.getGroup().sendMessage(uio.format("history", "reply", title,content));
                 }
 
-            } else if(command == "search") { //搜索类命令
+            } else if(command.equals("search")) { //搜索类命令
 
-                String keyword = splited_msg[1]; //关键词
+                String keyword = splitedMsg[1]; //关键词
                 String reply = ml.search(keyword); //标准化词条名
                 g.getGroup().sendMessage(uio.format("search", "reply", keyword,reply));
 
