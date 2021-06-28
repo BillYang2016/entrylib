@@ -20,7 +20,8 @@ build.gradle.kts里改依赖库和插件版本
 public final class JavaPluginMain extends JavaPlugin {
     public static final JavaPluginMain INSTANCE = new JavaPluginMain();
     private JavaPluginMain() {
-        super(new JvmPluginDescriptionBuilder("com.billyang.entrylib", "0.1.2")
+        super(new JvmPluginDescriptionBuilder("EntryLib", "0.1.3")
+                .id("com.billyang.entrylib")
                 .info("Ask and replay plugin for Mirai-Console")
                 .author("Bill Yang")
                 .build());
@@ -29,6 +30,7 @@ public final class JavaPluginMain extends JavaPlugin {
     private Map<String,String> commands = new HashMap<>();
     Database db = new Database();
     MatchLoader ml = new MatchLoader();
+    UserIO uio = new UserIO();
 
     @Override
     public void onEnable() {
@@ -38,18 +40,20 @@ public final class JavaPluginMain extends JavaPlugin {
         commands.put("历史","history"); //历史类命令
         commands.put("搜索","search"); //搜索类命令
 
-        if(!db.init()) { //初始化数据库
+        String DataFolderPath = getDataFolder().getAbsolutePath();
+        getLogger().info("配置文件目录：" + DataFolderPath);
+
+        if(!db.init(DataFolderPath)) { //初始化数据库
             getLogger().error("无法加载数据库，请检查数据库是否损坏？");
             getLogger().error("插件无法正常运行，将停止加载。");
             return;
         }
         ml.init(db); //初始化匹配器
+        uio.init(DataFolderPath); //初始化用户交互
 
         getLogger().info("词条插件已加载完成！");
 
         GlobalEventChannel.INSTANCE.subscribeAlways(GroupMessageEvent.class, g -> {
-            //监听群消息
-            //getLogger().info(g.getMessage().contentToString());
 
             String msg=g.getMessage().contentToString();
 
@@ -80,9 +84,9 @@ public final class JavaPluginMain extends JavaPlugin {
                 StringBuilder ErrorInfo = new StringBuilder();
                 boolean status = db.insert(g.getGroup().getId(),title,content,type,ErrorInfo); //向数据库插入
 
-                if(status == true)g.getGroup().sendMessage("已更新" + title + "词条！");
+                if(status == true)g.getGroup().sendMessage(uio.format("learn", "done", title));
                 else {
-                    g.getGroup().sendMessage("更新" + title + "词条失败！");
+                    g.getGroup().sendMessage(uio.format("learn", "fail", title));
                     getLogger().warning(String.valueOf(ErrorInfo));
                 }
 
@@ -96,26 +100,26 @@ public final class JavaPluginMain extends JavaPlugin {
                 int type = mv.type; //获取匹配到的匹配方式
 
                 if(id < 0) { //未找到
-                    g.getGroup().sendMessage("未找到与" + title + "相关的词条");
+                    g.getGroup().sendMessage(uio.format("view", "exist", title));
                     getLogger().warning(String.valueOf(ErrorInfo));
                 } else {
                     ErrorInfo = new StringBuilder();
                     String content = db.query(g.getGroup().getId(),id,ErrorInfo);
 
                     if(content == null) {
-                        g.getGroup().sendMessage("出错啦！");
+                        g.getGroup().sendMessage(uio.format("view", "error", title));
                         getLogger().warning(String.valueOf(ErrorInfo));
                     } else {
-                        if(type != 2)g.getGroup().sendMessage(title + "的内容如下：\n--------\n" + content);
+                        if(type != 2)g.getGroup().sendMessage(uio.format("view", "reply", title,content));
                         else { //处理正则替换内容
                             ErrorInfo = new StringBuilder();
 
                             RegularReplace rr = new RegularReplace(id,mv.title,splited_msg[1],content);
                             content = rr.replace(ErrorInfo); //正则替换
 
-                            if(content != null)g.getGroup().sendMessage(title + "的内容如下：\n--------\n" + content);
+                            if(content != null)g.getGroup().sendMessage(uio.format("view", "reply", title,content));
                             else {
-                                g.getGroup().sendMessage("出错啦！");
+                                g.getGroup().sendMessage(uio.format("view", "error", title));
                                 getLogger().warning(String.valueOf(ErrorInfo));
                             }
                         }
@@ -132,23 +136,23 @@ public final class JavaPluginMain extends JavaPlugin {
                 int type = mv.type; //获取匹配到的匹配方式
 
                 if(id < 0) { //未找到
-                    g.getGroup().sendMessage("未找到与" + title + "相关的词条");
+                    g.getGroup().sendMessage(uio.format("history", "exist", title));
                     getLogger().warning(String.valueOf(ErrorInfo));
                 } else {
                     ErrorInfo = new StringBuilder();
                     String content = db.history(g.getGroup().getId(),id,ErrorInfo);
 
                     if(content == null) {
-                        g.getGroup().sendMessage("出错啦！");
+                        g.getGroup().sendMessage(uio.format("history", "error", title));
                         getLogger().warning(String.valueOf(ErrorInfo));
-                    } else g.getGroup().sendMessage(title + "的历史情况如下：\n--------\n" + content);
+                    } else g.getGroup().sendMessage(uio.format("history", "reply", title,content));
                 }
 
             } else if(command == "search") { //搜索类命令
 
                 String keyword = splited_msg[1]; //关键词
                 String reply = ml.search(keyword); //标准化词条名
-                g.getGroup().sendMessage("搜索到如下词条：\n--------\n" + reply);
+                g.getGroup().sendMessage(uio.format("search", "reply", keyword,reply));
 
             }
 

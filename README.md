@@ -43,3 +43,4 @@ EntryLib 是一个基于 [Mirai-Console](https://github.com/mamoe/mirai-console)
 本插件依赖于以下模块：
 - mirai-console
 - sqlite-jdbc
+- fastjson

@@ -5,7 +5,10 @@ import java.sql.*;
 
 public class Database {
 
-    boolean init() {
+    String RootPath;
+
+    boolean init(String path) {
+        RootPath = path;
         File file = new File("data/EntryLib/databases/");
         if(!file.exists()) {
             file.mkdirs();
