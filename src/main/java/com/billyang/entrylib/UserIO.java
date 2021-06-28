@@ -1,6 +1,11 @@
 package com.billyang.entrylib;
 
 import com.alibaba.fastjson.JSONObject;
+import net.mamoe.mirai.event.events.GroupMessageEvent;
+import net.mamoe.mirai.message.data.At;
+import net.mamoe.mirai.message.data.Message;
+import net.mamoe.mirai.message.data.PlainText;
+import net.mamoe.mirai.message.data.QuoteReply;
 
 import java.io.*;
 
@@ -17,6 +22,8 @@ public class UserIO { //用户交互类
                 OutputStreamWriter writer = new OutputStreamWriter(fop,"UTF-8");
 
                 writer.append("{\n" +
+                        "  \"打开词条开关\":\"switch-on\",\n" +
+                        "  \"关闭词条开关\":\"switch-off\",\n" +
                         "  \"学习\":\"learn\",\n" +
                         "  \"查看\":\"view\",\n" +
                         "  \"历史\":\"history\",\n" +
@@ -42,6 +49,11 @@ public class UserIO { //用户交互类
                 OutputStreamWriter writer = new OutputStreamWriter(fop,"UTF-8");
 
                 writer.append("{\n" +
+                        "  \"switch\":{\n" +
+                        "    \"on\":\"已启用词条库插件！\",\n" +
+                        "    \"off\":\"已关闭词条库插件！\",\n" +
+                        "    \"error\":\"出错啦！\"\n" +
+                        "  },\n" +
                         "  \"learn\":{\n" +
                         "    \"done\":\"已更新 $1 词条！\",\n" +
                         "    \"fail\":\"更新 $1 词条失败！\"\n" +
@@ -75,6 +87,31 @@ public class UserIO { //用户交互类
         }
     }
 
+    void initGlobalConfig() {
+        File file = new File(path,"global.json");
+        if(!file.exists()) {
+            try {
+                file.createNewFile();
+                FileOutputStream fop = new FileOutputStream(file);
+                OutputStreamWriter writer = new OutputStreamWriter(fop,"UTF-8");
+
+                writer.append("{\n" +
+                        "  \"view-mode\":0,\n" +
+                        "  \"default-switch\":1,\n" +
+                        "  \"switch-permission\":1,\n" +
+                        "  \"reply-mode\":0\n" +
+                        "}"
+                );
+
+                writer.close();
+                fop.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        }
+    }
+
     void init(String path) {
 
         this.path = path;
@@ -83,6 +120,41 @@ public class UserIO { //用户交互类
 
         initOutput();
 
+        initGlobalConfig();
+
+    }
+
+    String getGlobalConfig(String key) {
+        File file = new File(path,"global.json");
+        if(!file.exists())initGlobalConfig();
+
+        StringBuffer sb = readFile(file);
+
+        try {
+            JSONObject configJson = JSONObject.parseObject(sb.toString());
+
+            return configJson.getString(key);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    boolean getViewMode() {
+        return getGlobalConfig("view-mode").equals("1");
+    }
+
+    boolean getDefaultSwitch() {
+        return getGlobalConfig("default-switch").equals("1");
+    }
+
+    boolean getSwitchPermission() {
+        return getGlobalConfig("switch-permission").equals("1");
+    }
+
+    int getReplyMode() {
+        return Integer.parseInt(getGlobalConfig("reply-mode"));
     }
 
     String parse(String command) {
@@ -103,7 +175,7 @@ public class UserIO { //用户交互类
         return null;
     }
 
-    String format(String fType,String sType, String... args) {
+    Message format(GroupMessageEvent g, String fType, String sType, String... args) {
         File file = new File(path,"output.json");
         if(!file.exists())initOutput();
 
@@ -116,7 +188,13 @@ public class UserIO { //用户交互类
 
             for(int i = 0; i < args.length; i++)answer = answer.replace("$" + (i + 1),args[i]);
 
-            return answer;
+            Message reply;
+            int replyMode = getReplyMode();
+            if(replyMode == 0)reply = new PlainText(answer);
+            else if(replyMode == 1)reply = new At(g.getSender().getId()).plus(answer);
+            else reply = new QuoteReply(g.getSource()).plus(answer);
+
+            return reply;
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -124,7 +202,7 @@ public class UserIO { //用户交互类
         return null;
     }
 
-    private StringBuffer readFile(File file) {
+    static StringBuffer readFile(File file) {
         StringBuffer sb = null;
         try {
             FileInputStream fip = new FileInputStream(file);

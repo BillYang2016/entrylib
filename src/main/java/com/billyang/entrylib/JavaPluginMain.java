@@ -2,9 +2,13 @@ package com.billyang.entrylib;
 
 import net.mamoe.mirai.console.plugin.jvm.JavaPlugin;
 import net.mamoe.mirai.console.plugin.jvm.JvmPluginDescriptionBuilder;
+import net.mamoe.mirai.contact.MemberPermission;
 import net.mamoe.mirai.event.GlobalEventChannel;
 import net.mamoe.mirai.event.events.FriendMessageEvent;
 import net.mamoe.mirai.event.events.GroupMessageEvent;
+import net.mamoe.mirai.message.data.At;
+import net.mamoe.mirai.message.data.Message;
+import net.mamoe.mirai.message.data.QuoteReply;
 
 
 /*
@@ -27,6 +31,7 @@ public final class JavaPluginMain extends JavaPlugin {
     Database db = new Database();
     MatchLoader ml = new MatchLoader();
     UserIO uio = new UserIO();
+    EnableGroups eg = new EnableGroups();
 
     @Override
     public void onEnable() {
@@ -41,19 +46,42 @@ public final class JavaPluginMain extends JavaPlugin {
         }
         ml.init(db); //初始化匹配器
         uio.init(DataFolderPath); //初始化用户交互
+        eg.init(DataFolderPath,uio); //初始化群开关
 
         getLogger().info("词条插件已加载完成！");
 
         GlobalEventChannel.INSTANCE.subscribeAlways(GroupMessageEvent.class, g -> {
 
+            String command = uio.parse(g.getMessage().contentToString()); //全局指令解析
+
+            if(command != null) {
+                if(!uio.getSwitchPermission() || g.getSender().getPermission() != MemberPermission.MEMBER) { //权限判断
+                    if(command.equals("switch-on")) {
+                        if(eg.turnOn(g.getGroup().getId()))g.getGroup().sendMessage(uio.format(g,"switch", "on"));
+                        else g.getGroup().sendMessage(uio.format(g,"switch", "error"));
+                    } else if(command.equals("switch-off")) {
+                        if(eg.turnOff(g.getGroup().getId()))g.getGroup().sendMessage(uio.format(g,"switch", "off"));
+                        else g.getGroup().sendMessage(uio.format(g,"switch", "error"));
+                    }
+                    return;
+                }
+            }
+
+            if(!eg.check(g.getGroup().getId()))return; //开关未开启，不执行反馈
+
             String msg=g.getMessage().contentToString();
 
             String[] splitedMsg = msg.split("#");
 
-            if(splitedMsg.length < 2) return; //不构成命令格式
+            if(uio.getViewMode()) { //查询模式为1，忽略命令格式
+                command = "view";
+            } else { //查询模式为0，根据Input模块分析命令
 
-            String command = uio.parse(splitedMsg[0]);
-            if(command != null)getLogger().info("Got Input Command: " + command);
+                if(splitedMsg.length < 2) return; //不构成命令格式
+
+                command = uio.parse(splitedMsg[0]);
+                if(command != null)getLogger().info("Got Input Command: " + command);
+            }
 
             if(command == null) return; //无对应命令
             else if(command.equals("learn")) { //学习类命令
@@ -76,9 +104,9 @@ public final class JavaPluginMain extends JavaPlugin {
                 StringBuilder ErrorInfo = new StringBuilder();
                 boolean status = db.insert(g.getGroup().getId(),title,content,type,ErrorInfo); //向数据库插入
 
-                if(status)g.getGroup().sendMessage(uio.format("learn", "done", title));
+                if(status)g.getGroup().sendMessage(uio.format(g,"learn", "done", title));
                 else {
-                    g.getGroup().sendMessage(uio.format("learn", "fail", title));
+                    g.getGroup().sendMessage(uio.format(g,"learn", "fail", title));
                     getLogger().warning(String.valueOf(ErrorInfo));
                 }
 
@@ -91,25 +119,25 @@ public final class JavaPluginMain extends JavaPlugin {
                 int type = mv.type; //获取匹配到的匹配方式
 
                 if(id < 0) { //未找到
-                    g.getGroup().sendMessage(uio.format("view", "exist", title));
+                    g.getGroup().sendMessage(uio.format(g,"view", "exist", title));
                 } else {
                     StringBuilder ErrorInfo = new StringBuilder(); //错误信息
                     String content = db.query(g.getGroup().getId(),id,ErrorInfo);
 
                     if(content == null) {
-                        g.getGroup().sendMessage(uio.format("view", "error", title));
+                        g.getGroup().sendMessage(uio.format(g,"view", "error", title));
                         getLogger().warning(String.valueOf(ErrorInfo));
                     } else {
-                        if(type != 2)g.getGroup().sendMessage(uio.format("view", "reply", title,content));
+                        if(type != 2)g.getGroup().sendMessage(uio.format(g,"view", "reply", title,content));
                         else { //处理正则替换内容
                             ErrorInfo = new StringBuilder();
 
                             RegularReplace rr = new RegularReplace(id,mv.title,splitedMsg[1],content);
                             content = rr.replace(ErrorInfo); //正则替换
 
-                            if(content != null)g.getGroup().sendMessage(uio.format("view", "reply", title,content));
+                            if(content != null)g.getGroup().sendMessage(uio.format(g,"view", "reply", title,content));
                             else {
-                                g.getGroup().sendMessage(uio.format("view", "error", title));
+                                g.getGroup().sendMessage(uio.format(g,"view", "error", title));
                                 getLogger().warning(String.valueOf(ErrorInfo));
                             }
                         }
@@ -125,22 +153,22 @@ public final class JavaPluginMain extends JavaPlugin {
                 int type = mv.type; //获取匹配到的匹配方式
 
                 if(id < 0) { //未找到
-                    g.getGroup().sendMessage(uio.format("history", "exist", title));
+                    g.getGroup().sendMessage(uio.format(g,"history", "exist", title));
                 } else {
                     StringBuilder ErrorInfo = new StringBuilder(); //错误信息
                     String content = db.history(g.getGroup().getId(),id,ErrorInfo);
 
                     if(content == null) {
-                        g.getGroup().sendMessage(uio.format("history", "error", title));
+                        g.getGroup().sendMessage(uio.format(g,"history", "error", title));
                         getLogger().warning(String.valueOf(ErrorInfo));
-                    } else g.getGroup().sendMessage(uio.format("history", "reply", title,content));
+                    } else g.getGroup().sendMessage(uio.format(g,"history", "reply", title,content));
                 }
 
             } else if(command.equals("search")) { //搜索类命令
 
                 String keyword = splitedMsg[1]; //关键词
                 String reply = ml.search(keyword); //标准化词条名
-                g.getGroup().sendMessage(uio.format("search", "reply", keyword,reply));
+                g.getGroup().sendMessage(uio.format(g,"search", "reply", keyword,reply));
 
             }
 
