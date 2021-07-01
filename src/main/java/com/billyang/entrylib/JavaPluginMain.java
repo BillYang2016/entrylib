@@ -159,7 +159,7 @@ public final class JavaPluginMain extends JavaPlugin {
                         }
                     }
 
-                    String single = uio.formatString(g,"history", "single", String.valueOf(versionId), content, time);
+                    String single = uio.formatString("history", "single", String.valueOf(versionId), content, time);
                     reply.append(single);
 
                     i ++;
@@ -207,9 +207,9 @@ public final class JavaPluginMain extends JavaPlugin {
             int type = mv.type;
             String single;
 
-            if(type == 0) single = uio.formatString(g,"search", "single", title);
-            else if(type == 1) single = uio.formatString(g,"search", "single-fuzzy", title);
-            else single = uio.formatString(g,"search", "single-regex", title);
+            if(type == 0) single = uio.formatString("search", "single", title);
+            else if(type == 1) single = uio.formatString("search", "single-fuzzy", title);
+            else single = uio.formatString("search", "single-regex", title);
 
             reply.append(single);
 
@@ -255,9 +255,9 @@ public final class JavaPluginMain extends JavaPlugin {
             int type = mv.type;
             String single;
 
-            if(type == 0) single = uio.formatString(g,"all", "single", title);
-            else if(type == 1) single = uio.formatString(g,"all", "single-fuzzy", title);
-            else single = uio.formatString(g,"all", "single-regex", title);
+            if(type == 0) single = uio.formatString("all", "single", title);
+            else if(type == 1) single = uio.formatString("all", "single-fuzzy", title);
+            else single = uio.formatString("all", "single-regex", title);
 
             reply.append(single);
 
@@ -278,7 +278,7 @@ public final class JavaPluginMain extends JavaPlugin {
             return;
         }
         ml.init(db); //初始化匹配器
-        uio.init(DataFolderPath); //初始化用户交互
+        uio.init(this, DataFolderPath); //初始化用户交互
         eg.init(DataFolderPath,uio); //初始化群开关
 
         getLogger().info("词条插件已加载完成！");

@@ -2,7 +2,6 @@ package com.billyang.entrylib;
 
 import java.sql.*;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.regex.*;
@@ -23,9 +22,7 @@ class MatchValueComparator implements Comparator<MatchValue> {
     public int compare(MatchValue a, MatchValue b) {
         if(a.id < b.id) return -1; //先按照id排序
         if(a.id > b.id) return 1;
-        if(a.type < b.type) return -1; //再按照查找方式排序
-        if(a.type > b.type) return 1;
-        return 0;
+        return Integer.compare(a.type, b.type); //再按照查找方式排序
     }
 }
 
@@ -160,14 +157,14 @@ public class MatchLoader {
     static List<MatchValue> unique (List<MatchValue> list) {
         if(list.isEmpty()) return list;
 
-        Collections.sort(list,new MatchValueComparator());
+        list.sort(new MatchValueComparator());
 
         List<MatchValue> uniqueList = new ArrayList<>();
-        int lastid = -1;
+        int lastId = -1;
 
         for(MatchValue mv : list) {
-            if(mv.id != lastid) uniqueList.add(mv);
-            lastid = mv.id;
+            if(mv.id != lastId) uniqueList.add(mv);
+            lastId = mv.id;
         }
 
         return uniqueList;

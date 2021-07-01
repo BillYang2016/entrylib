@@ -1,6 +1,7 @@
 package com.billyang.entrylib;
 
 import com.alibaba.fastjson.JSONObject;
+import net.mamoe.mirai.console.plugin.jvm.JavaPlugin;
 import net.mamoe.mirai.event.events.GroupMessageEvent;
 import net.mamoe.mirai.message.data.At;
 import net.mamoe.mirai.message.data.Message;
@@ -8,137 +9,88 @@ import net.mamoe.mirai.message.data.PlainText;
 import net.mamoe.mirai.message.data.QuoteReply;
 
 import java.io.*;
+import java.util.Map;
+import java.util.Set;
 
 public class UserIO { //用户交互类
 
+    JavaPlugin jp;
     String path;
 
-    void initInput() {
-        File file = new File(path,"input.json");
-        if(!file.exists()) {
+    void loadFile(String fileName) {
+        File file = new File(path,fileName);
+        if(!file.exists()) { //如果没有则复制
             try {
                 file.createNewFile();
                 FileOutputStream fop = new FileOutputStream(file);
                 OutputStreamWriter writer = new OutputStreamWriter(fop,"UTF-8");
 
-                writer.append("{\n" +
-                        "  \"打开词条开关\":\"switch-on\",\n" +
-                        "  \"关闭词条开关\":\"switch-off\",\n" +
-                        "  \"学习\":\"learn\",\n" +
-                        "  \"查看\":\"view\",\n" +
-                        "  \"历史\":\"history\",\n" +
-                        "  \"搜索\":\"search\",\n" +
-                        "  \"全部\":\"all\"\n" +
-                        "}"
-                );
+                writer.append(jp.getResource(fileName));
 
                 writer.close();
                 fop.close();
             } catch (IOException e) {
                 e.printStackTrace();
             }
-
-        }
-    }
-
-    void initOutput() {
-        File file = new File(path,"output.json");
-        if(!file.exists()) {
+        } else { //如果有则逐项检查，添加不存在的项
+            StringBuffer sb = readFile(file);
             try {
-                file.createNewFile();
+                JSONObject configJson = JSONObject.parseObject(sb.toString());
+                JSONObject templateJson = JSONObject.parseObject(jp.getResource(fileName));
+
+                for(Map.Entry<String, Object> entry : templateJson.entrySet()) {
+                    String firstKey = entry.getKey();
+                    Object firstValue = entry.getValue();
+
+                    if(firstValue instanceof String || firstValue instanceof Integer) { //单层
+                        if(!configJson.containsKey(firstKey))configJson.put(firstKey,firstValue);
+                    } else { //双层嵌套json
+                        JSONObject sJson;
+                        if(configJson.containsKey(firstKey)) {
+                            sJson = configJson.getJSONObject(firstKey);
+                        } else {
+                            sJson = JSONObject.parseObject("{}");
+                        }
+
+                        for(Map.Entry<String, Object> entrySon : templateJson.getJSONObject(firstKey).entrySet()) {
+                            String secondKey = entrySon.getKey();
+                            Object secondValue = entrySon.getValue();
+                            if(!sJson.containsKey(secondKey))sJson.put(secondKey, secondValue);
+                        }
+
+                        configJson.put(firstKey, sJson);
+                    }
+                }
+
+                String config = JsonFormater.format(configJson.toJSONString());
+
                 FileOutputStream fop = new FileOutputStream(file);
                 OutputStreamWriter writer = new OutputStreamWriter(fop,"UTF-8");
 
-                writer.append("{\n" +
-                        "  \"switch\":{\n" +
-                        "    \"on\":\"已启用词条库插件！\",\n" +
-                        "    \"off\":\"已关闭词条库插件！\",\n" +
-                        "    \"error\":\"出错啦！\"\n" +
-                        "  },\n" +
-                        "  \"learn\":{\n" +
-                        "    \"done\":\"已更新 $1 词条！\",\n" +
-                        "    \"reject\":\"$1 是重要指令或系统保留字段，拒绝对其进行更新！\",\n" +
-                        "    \"fail\":\"更新 $1 词条失败！\"\n" +
-                        "  },\n" +
-                        "  \"view\":{\n" +
-                        "    \"reply\":\"$1 的内容如下：\\n--------\\n$2\",\n" +
-                        "    \"exist\":\"未找到 $1 相关的词条！\",\n" +
-                        "    \"reject\":\"$1 是重要指令或系统保留字段，拒绝对其进行访问！\",\n" +
-                        "    \"error\":\"查询 $1 时出错啦！\"\n" +
-                        "  },\n" +
-                        "  \"history\":{\n" +
-                        "    \"reply\":\"$1 的历史情况如下（第$3/$4页）：\\n--------\\n$2\",\n" +
-                        "    \"single\":\"版本$1（修改时间：$3）：\\n$2\\n-----\\n\",\n" +
-                        "    \"exist\":\"未找到 $1 相关的词条！\",\n" +
-                        "    \"empty\":\"$1 词条的第$2页历史结果为空，总计$3页！\",\n" +
-                        "    \"reject\":\"$1 是重要指令或系统保留字段，拒绝对其进行访问！\",\n" +
-                        "    \"error\":\"查询 $1 时出错啦！\"\n" +
-                        "  },\n" +
-                        "  \"search\":{\n" +
-                        "    \"reply\":\"根据 $1 搜索到如下词条：（第$3/$4页）\\n$2\",\n" +
-                        "    \"single\":\"- $1\\n\",\n" +
-                        "    \"single-fuzzy\":\"- $1（模糊）\\n\",\n" +
-                        "    \"single-regex\":\"- $1（正则）\\n\",\n" +
-                        "    \"exist\":\"未找到 $1 相关的词条！\",\n" +
-                        "    \"empty\":\"$1 的第$2页搜索结果为空，总计$3页！\",\n" +
-                        "    \"error\":\"查询 $1 时出错啦！\"\n" +
-                        "  },\n" +
-                        "  \"all\":{\n" +
-                        "    \"reply\":\"全部词条：（第$2/$3页）\\n$1\",\n" +
-                        "    \"single\":\"- $1\\n\",\n" +
-                        "    \"single-fuzzy\":\"- $1（模糊）\\n\",\n" +
-                        "    \"single-regex\":\"- $1（正则）\\n\",\n" +
-                        "    \"exist\":\"不存在任何词条！\",\n" +
-                        "    \"empty\":\"第$1页结果为空，总计$2页！\",\n" +
-                        "    \"error\":\"出错啦！\"\n" +
-                        "  }\n" +
-                        "}"
-                );
+                writer.append(config);
 
                 writer.close();
                 fop.close();
-            } catch (IOException e) {
+
+            } catch (Exception e) {
                 e.printStackTrace();
             }
-
         }
     }
 
-    void initGlobalConfig() {
-        File file = new File(path,"global.json");
-        if(!file.exists()) {
-            try {
-                file.createNewFile();
-                FileOutputStream fop = new FileOutputStream(file);
-                OutputStreamWriter writer = new OutputStreamWriter(fop,"UTF-8");
+    void initInput() {loadFile("input.json");}
 
-                writer.append("{\n" +
-                        "  \"view-mode\":0,\n" +
-                        "  \"default-switch\":1,\n" +
-                        "  \"switch-permission\":1,\n" +
-                        "  \"history-max-height\":3,\n" +
-                        "  \"search-max-height\":5,\n" +
-                        "  \"reply-mode\":0\n" +
-                        "}"
-                );
+    void initOutput() {loadFile("output.json");}
 
-                writer.close();
-                fop.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+    void initGlobalConfig() {loadFile("global.json");}
 
-        }
-    }
+    void init(JavaPlugin jp, String path) {
 
-    void init(String path) {
-
+        this.jp = jp;
         this.path = path;
 
         initInput();
-
         initOutput();
-
         initGlobalConfig();
 
     }
@@ -200,7 +152,7 @@ public class UserIO { //用户交互类
         return null;
     }
 
-    String formatString(GroupMessageEvent g, String fType, String sType, String... args) {
+    String formatString(String fType, String sType, String... args) {
         File file = new File(path,"output.json");
         if(!file.exists()) initOutput();
 
@@ -222,7 +174,7 @@ public class UserIO { //用户交互类
     }
 
     Message format(GroupMessageEvent g, String fType, String sType, String... args) {
-        String answer = formatString(g, fType, sType, args);
+        String answer = formatString(fType, sType, args);
 
         if(answer == null) return null;
 
