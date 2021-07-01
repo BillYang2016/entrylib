@@ -6,11 +6,11 @@ EntryLib 是一个基于 [Mirai-Console](https://github.com/mamoe/mirai-console)
 
 ## 项目仍在开发中
 
-**目前版本：0.1.4**
+**目前版本：0.1.5**
 
 开发模块：
 - [x] Mirai通信
-- [ ] 指令模块
+- [x] 指令模块
 - [x] 数据库模块
 - [x] 用户OI
 - [ ] GUI
