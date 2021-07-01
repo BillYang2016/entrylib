@@ -192,7 +192,7 @@ public class UserIO { //用户交互类
             JSONObject sJson = configJson.getJSONObject(fType);
             String answer = sJson.getString(sType);
 
-            for(int i = 0; i < args.length; i++)answer = answer.replace("$" + (i + 1),args[i]);
+            for(int i = 0; i < args.length; i++)answer = answer.replace("$" + (i + 1), args[i]);
 
             return answer;
         } catch (Exception e) {

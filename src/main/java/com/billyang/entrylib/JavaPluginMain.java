@@ -35,7 +35,7 @@ public final class JavaPluginMain extends JavaPlugin {
 
     void processLearn(GroupMessageEvent g,String title,String content,int type) {
         StringBuilder ErrorInfo = new StringBuilder();
-        boolean status = db.insert(g.getGroup().getId(),title,content,type,ErrorInfo); //向数据库插入
+        boolean status = db.insert(g.getGroup().getId(), title, content, type, ErrorInfo); //向数据库插入
 
         if(status)g.getGroup().sendMessage(uio.format(g,"learn", "done", title));
         else {
@@ -53,7 +53,7 @@ public final class JavaPluginMain extends JavaPlugin {
             if(!cancelError)g.getGroup().sendMessage(uio.format(g,"view", "exist", title));
         } else {
             StringBuilder ErrorInfo = new StringBuilder(); //错误信息
-            String content = db.query(g.getGroup().getId(),id,ErrorInfo);
+            String content = db.query(g.getGroup().getId(), id, ErrorInfo);
 
             if(content == null) {
                 if(!cancelError) {
@@ -65,7 +65,7 @@ public final class JavaPluginMain extends JavaPlugin {
                 else { //处理正则替换内容
                     ErrorInfo = new StringBuilder();
 
-                    RegularReplace rr = new RegularReplace(id,mv.title,title,content);
+                    RegularReplace rr = new RegularReplace(id, mv.title, title, content);
                     content = rr.replace(ErrorInfo); //正则替换
 
                     if(content != null)g.getGroup().sendMessage(uio.format(g,"view", "reply", title, content));
@@ -87,29 +87,29 @@ public final class JavaPluginMain extends JavaPlugin {
             g.getGroup().sendMessage(uio.format(g,"history", "exist", title));
         } else {
             StringBuilder ErrorInfo = new StringBuilder(); //错误信息
-            List<QueryValue> contentList = db.history(g.getGroup().getId(),id,ErrorInfo);
+            List<QueryValue> contentList = db.history(g.getGroup().getId(), id, ErrorInfo); //获取列表
 
             if(contentList == null) {
                 g.getGroup().sendMessage(uio.format(g,"history", "error", title));
                 getLogger().warning(String.valueOf(ErrorInfo));
             } else {
-                int length = contentList.size(), maxHeight = uio.getHistoryMaxHeight(), maxPage;
+                int length = contentList.size(), maxHeight = uio.getHistoryMaxHeight(), maxPage; //计算最大页码
                 try {
                     maxPage = (int) Math.ceil(1.0 * length / maxHeight);
-                } catch (ArithmeticException e) {
+                } catch (ArithmeticException e) { //除以0
                     e.printStackTrace();
                     return;
                 }
 
-                if(page > maxPage || page <= 0) {
+                if(page > maxPage || page <= 0) { //页码超过范围
                     g.getGroup().sendMessage(uio.format(g,"history", "empty", title, String.valueOf(page), String.valueOf(maxPage)));
                     return;
                 }
 
                 StringBuilder reply = new StringBuilder();
-                int i = 0, begin = (page - 1) * maxHeight, end = page * maxHeight;
+                int i = 0, begin = (page - 1) * maxHeight, end = page * maxHeight; //计算页数对应的编号始末
 
-                Collections.reverse(contentList);
+                Collections.reverse(contentList); //翻转列表
 
                 for(QueryValue qv : contentList) {
                     if(i < begin) { //跳转至页首
@@ -194,11 +194,11 @@ public final class JavaPluginMain extends JavaPlugin {
                     command = uio.parse(splitedMsg[0]);
                     if(command != null)getLogger().info("Got Input Command: " + command);
                     else {
-                        processView(g,msg,true);
+                        processView(g, msg,true);
                         return;
                     }
                 } else {
-                    processView(g,msg,true);
+                    processView(g, msg,true);
                     return;
                 }
             } else { //查询模式为0，根据Input模块分析命令
@@ -227,11 +227,11 @@ public final class JavaPluginMain extends JavaPlugin {
                     else if(sType.contains("正则")) type = 2;
                 }
 
-                processLearn(g,title, content, type);
+                processLearn(g, title, content, type);
 
             } else if(command.equals("view")) { //查看类命令
 
-                processView(g,splitedMsg[1],false);
+                processView(g, splitedMsg[1],false);
 
             } else if(command.equals("history")) { //历史类命令
 
@@ -246,13 +246,13 @@ public final class JavaPluginMain extends JavaPlugin {
                     }
                 }
 
-                processHistory(g,splitedMsg[1],page);
+                processHistory(g, splitedMsg[1], page);
 
             } else if(command.equals("search")) { //搜索类命令
 
                 String keyword = splitedMsg[1]; //关键词
                 String reply = ml.search(keyword); //标准化词条名
-                g.getGroup().sendMessage(uio.format(g,"search", "reply", keyword,reply));
+                g.getGroup().sendMessage(uio.format(g,"search", "reply", keyword, reply));
 
             }
 

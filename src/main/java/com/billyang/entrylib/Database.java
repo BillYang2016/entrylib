@@ -3,7 +3,6 @@ package com.billyang.entrylib;
 import java.io.File;
 import java.sql.*;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 class QueryValue {
@@ -205,7 +204,7 @@ public class Database {
                 String content = rs.getString("CONTENT");
                 String time = rs.getString("TS");
 
-                QueryValue qv = new QueryValue(versionId,content,time);
+                QueryValue qv = new QueryValue(versionId, content, time);
                 list.add(qv);
             }
         } catch( Exception e ) {
