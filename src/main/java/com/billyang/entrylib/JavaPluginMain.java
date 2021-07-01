@@ -185,7 +185,8 @@ public final class JavaPluginMain extends JavaPlugin {
             int type = mv.type;
             String single;
 
-            if(type != 2) single = uio.formatString(g,"search", "single", title);
+            if(type == 0) single = uio.formatString(g,"search", "single", title);
+            else if(type == 1) single = uio.formatString(g,"search", "single-fuzzy", title);
             else single = uio.formatString(g,"search", "single-regex", title);
 
             reply.append(single);
@@ -193,6 +194,54 @@ public final class JavaPluginMain extends JavaPlugin {
             i ++;
         }
         g.getGroup().sendMessage(uio.format(g,"search", "reply", keyword, reply.toString(), String.valueOf(page), String.valueOf(maxPage)));
+    }
+
+    void processAll(GroupMessageEvent g,int page) {
+        List<MatchValue> list = ml.all(g.getGroup().getId());
+        StringBuilder reply = new StringBuilder();
+
+        if(list.isEmpty()) { //未找到结果
+            g.getGroup().sendMessage(uio.format(g,"all", "exist"));
+            return;
+        }
+
+        int length = list.size(), maxHeight = uio.getSearchMaxHeight(), maxPage; //计算最大页码
+
+        try {
+            maxPage = (int) Math.ceil(1.0 * length / maxHeight);
+        } catch (ArithmeticException e) { //除以0
+            g.getGroup().sendMessage(uio.format(g, "all", "error"));
+            e.printStackTrace();
+            return;
+        }
+
+        if(page > maxPage || page <= 0) { //页码超过范围
+            g.getGroup().sendMessage(uio.format(g,"all", "empty", String.valueOf(page), String.valueOf(maxPage)));
+            return;
+        }
+
+        int i = 0, begin = (page - 1) * maxHeight, end = page * maxHeight; //计算页数对应的编号始末
+
+        for(MatchValue mv : list) { //依次格式化单条
+            if(i < begin) { //跳转至页首
+                i ++;
+                continue;
+            }
+            if(i >= end) break; //越过页尾
+
+            String title = mv.title;
+            int type = mv.type;
+            String single;
+
+            if(type == 0) single = uio.formatString(g,"all", "single", title);
+            else if(type == 1) single = uio.formatString(g,"all", "single-fuzzy", title);
+            else single = uio.formatString(g,"all", "single-regex", title);
+
+            reply.append(single);
+
+            i ++;
+        }
+        g.getGroup().sendMessage(uio.format(g,"all", "reply", reply.toString(), String.valueOf(page), String.valueOf(maxPage)));
     }
 
     @Override
@@ -219,25 +268,36 @@ public final class JavaPluginMain extends JavaPlugin {
             if(command != null) {
                 if(!uio.getSwitchPermission() || g.getSender().getPermission() != MemberPermission.MEMBER) { //权限判断
                     if(command.equals("switch-on")) {
+                        getLogger().info("Got Input Command: " + command);
                         if(eg.turnOn(g.getGroup().getId()))g.getGroup().sendMessage(uio.format(g,"switch", "on"));
                         else g.getGroup().sendMessage(uio.format(g,"switch", "error"));
+                        return;
                     } else if(command.equals("switch-off")) {
+                        getLogger().info("Got Input Command: " + command);
                         if(eg.turnOff(g.getGroup().getId()))g.getGroup().sendMessage(uio.format(g,"switch", "off"));
                         else g.getGroup().sendMessage(uio.format(g,"switch", "error"));
+                        return;
                     }
-                    return;
                 }
             }
 
             if(!eg.check(g.getGroup().getId()))return; //开关未开启，不执行反馈
+
+            if(command != null && command.equals("all")) { //搜索全部类命令
+                getLogger().info("Got Input Command: " + command);
+                processAll(g, 1);
+                return;
+            }
 
             String msg = g.getMessage().contentToString();
 
             msg = msg.replace("\\\\","__ANTI_ESCAPE__");
             msg = msg.replace("\\#","__ESCAPE_CHAR__"); //转义
             String[] splitedMsg = msg.split("#");
+            msg = msg.replace("__ESCAPE_CHAR__","#");
+            msg = msg.replace("__ANTI_ESCAPE__","\\"); //转义回来
             for(int i = 0; i < splitedMsg.length; i ++) {
-                splitedMsg[i] = splitedMsg[i].replace("__ESCAPE_CHAR__","#"); //转义回来
+                splitedMsg[i] = splitedMsg[i].replace("__ESCAPE_CHAR__","#");
                 splitedMsg[i] = splitedMsg[i].replace("__ANTI_ESCAPE__","\\");
             }
 
@@ -314,6 +374,19 @@ public final class JavaPluginMain extends JavaPlugin {
                 }
 
                 processSearch(g, splitedMsg[1],page);
+
+            } else if(command.equals("all")) { //搜索全部类命令
+
+                int page = 1;
+
+                try { //尝试转换为数字
+                    splitedMsg[1] = splitedMsg[1].trim();
+                    page = Integer.parseInt(splitedMsg[1]);
+                } catch (Exception e) {
+                    //转换失败
+                }
+
+                processAll(g,page);
 
             }
 

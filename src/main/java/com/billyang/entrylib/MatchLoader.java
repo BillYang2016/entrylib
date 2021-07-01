@@ -134,6 +134,29 @@ public class MatchLoader {
         return unique(list);
     }
 
+    List<MatchValue> all(long groupID) {
+        db.connect(groupID);
+
+        Statement stmt = db.stmt;
+
+        List<MatchValue> list = new ArrayList<>();
+
+        try {
+            String sql = "SELECT * FROM __MAIN_TABLE;";
+            ResultSet rs = stmt.executeQuery(sql);
+            while(rs.next()) {
+                int id = rs.getInt("ID");
+                String target = rs.getString("TITLE");
+                int type = rs.getInt("MATCH_MODE");
+                list.add(new MatchValue(id, target, type));
+            }
+        } catch( Exception e ) {
+            e.printStackTrace();
+        }
+
+        return list;
+    }
+
     static List<MatchValue> unique (List<MatchValue> list) {
         if(list.isEmpty())return list;
 
