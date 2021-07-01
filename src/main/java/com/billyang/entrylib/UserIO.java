@@ -64,9 +64,10 @@ public class UserIO { //用户交互类
                         "    \"error\":\"查询 $1 时出错啦！\"\n" +
                         "  },\n" +
                         "  \"history\":{\n" +
-                        "    \"reply\":\"$1 的历史情况如下：\\n--------\\n$2\",\n" +
-                        "    \"single\":\"版本$1（修改时间：$3）：\\n-----\\n$2\\n-----\",\n" +
+                        "    \"reply\":\"$1 的历史情况如下（第$3/$4页）：\\n--------\\n$2\",\n" +
+                        "    \"single\":\"版本$1（修改时间：$3）：\\n$2\\n-----\\n\",\n" +
                         "    \"exist\":\"未找到 $1 相关的词条！\",\n" +
+                        "    \"empty\":\"$1 词条的第$2页历史结果为空，总计$3页！\",\n" +
                         "    \"error\":\"查询 $1 时出错啦！\"\n" +
                         "  },\n" +
                         "  \"search\":{\n" +
@@ -99,6 +100,7 @@ public class UserIO { //用户交互类
                         "  \"view-mode\":0,\n" +
                         "  \"default-switch\":1,\n" +
                         "  \"switch-permission\":1,\n" +
+                        "  \"history-max-height\":3,\n" +
                         "  \"reply-mode\":0\n" +
                         "}"
                 );
@@ -153,6 +155,10 @@ public class UserIO { //用户交互类
         return getGlobalConfig("switch-permission").equals("1");
     }
 
+    int getHistoryMaxHeight() {
+        return Integer.parseInt(getGlobalConfig("history-max-height"));
+    }
+
     int getReplyMode() {
         return Integer.parseInt(getGlobalConfig("reply-mode"));
     }
@@ -175,7 +181,7 @@ public class UserIO { //用户交互类
         return null;
     }
 
-    Message format(GroupMessageEvent g, String fType, String sType, String... args) {
+    String formatString(GroupMessageEvent g, String fType, String sType, String... args) {
         File file = new File(path,"output.json");
         if(!file.exists())initOutput();
 
@@ -188,18 +194,26 @@ public class UserIO { //用户交互类
 
             for(int i = 0; i < args.length; i++)answer = answer.replace("$" + (i + 1),args[i]);
 
-            Message reply;
-            int replyMode = getReplyMode();
-            if(replyMode == 0)reply = new PlainText(answer);
-            else if(replyMode == 1)reply = new At(g.getSender().getId()).plus(answer);
-            else reply = new QuoteReply(g.getSource()).plus(answer);
-
-            return reply;
+            return answer;
         } catch (Exception e) {
             e.printStackTrace();
         }
 
         return null;
+    }
+
+    Message format(GroupMessageEvent g, String fType, String sType, String... args) {
+        String answer = formatString(g, fType, sType, args);
+
+        if(answer == null)return null;
+
+        Message reply;
+        int replyMode = getReplyMode();
+        if(replyMode == 0)reply = new PlainText(answer);
+        else if(replyMode == 1)reply = new At(g.getSender().getId()).plus(answer);
+        else reply = new QuoteReply(g.getSource()).plus(answer);
+
+        return reply;
     }
 
     static StringBuffer readFile(File file) {

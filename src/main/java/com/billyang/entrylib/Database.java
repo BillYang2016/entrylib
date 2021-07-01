@@ -2,6 +2,20 @@ package com.billyang.entrylib;
 
 import java.io.File;
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
+class QueryValue {
+    int id;
+    String content;
+    String time;
+    QueryValue(int id,String content,String time) {
+        this.id = id;
+        this.content = content;
+        this.time = time;
+    }
+}
 
 public class Database {
 
@@ -174,8 +188,33 @@ public class Database {
         }
     }
 
-    String history(long groupId,int id,StringBuilder ErrorInfo) {
-        return null;
-    }
+    List<QueryValue> history(long groupId, int id, StringBuilder ErrorInfo) {
+        if(!connect(groupId)) {
+            ErrorInfo.append("数据库连接失败！");
+            return null;
+        }
 
+        String table = "TABLE_" + id;
+        List<QueryValue> list = new ArrayList<>();
+
+        try {
+            String sql = "SELECT * FROM " + table + ";";
+            ResultSet rs = stmt.executeQuery(sql);
+            while(rs.next()) {
+                int versionId = rs.getInt("ID");
+                String content = rs.getString("CONTENT");
+                String time = rs.getString("TS");
+
+                QueryValue qv = new QueryValue(versionId,content,time);
+                list.add(qv);
+            }
+        } catch( Exception e ) {
+            close();
+            ErrorInfo.append("无法在").append(table).append("词条表中查询数据！");
+            return null;
+        }
+
+        close();
+        return list;
+    }
 }
