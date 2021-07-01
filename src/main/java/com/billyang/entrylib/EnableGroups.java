@@ -33,7 +33,7 @@ public class EnableGroups { //群开关
         }
     }
 
-    void init(String path,UserIO uio) {
+    void init(String path, UserIO uio) {
         this.path = path;
         this.uio = uio;
 
@@ -43,7 +43,7 @@ public class EnableGroups { //群开关
 
     boolean check(long groupId) {
         File file = new File(path,"switch.json");
-        if(!file.exists())initFile();
+        if(!file.exists()) initFile();
 
         StringBuffer sb = UserIO.readFile(file);
 
@@ -61,9 +61,9 @@ public class EnableGroups { //群开关
         return uio.getDefaultSwitch();
     }
 
-    boolean turn(long groupId,boolean mode) {
+    boolean turn(long groupId, boolean mode) {
         File file = new File(path,"switch.json");
-        if(!file.exists())initFile();
+        if(!file.exists()) initFile();
 
         StringBuffer sb = UserIO.readFile(file);
 

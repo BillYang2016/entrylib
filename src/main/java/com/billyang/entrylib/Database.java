@@ -10,7 +10,7 @@ class QueryValue {
     String content;
     String time;
 
-    QueryValue(int id,String content,String time) {
+    QueryValue(int id, String content, String time) {
         this.id = id;
         this.content = content;
         this.time = time;
@@ -31,7 +31,7 @@ public class Database {
         return true;
     }
 
-    public boolean exists(Statement stmt,String table) { //判断表是否存在
+    public boolean exists(Statement stmt, String table) { //判断表是否存在
         try {
             stmt.executeQuery("SELECT * FROM " + table);
             return true;
@@ -79,7 +79,7 @@ public class Database {
         try {
             String sql = "SELECT count(*) as length from " + table + ";";
             ResultSet rs = stmt.executeQuery(sql);
-            if(rs.next())return rs.getInt("length");
+            if(rs.next()) return rs.getInt("length");
             else return -3;
         } catch( Exception e ) {
             return -2;
@@ -87,20 +87,20 @@ public class Database {
     }
 
     int find_id(String title) { //已建立连接情况下，在主表中查询 TITLE->ID 返回负数表示异常
-        if(c == null && stmt == null)return -1;
+        if(c == null && stmt == null) return -1;
 
         try {
             String sql = "SELECT * FROM __MAIN_TABLE WHERE TITLE='" + title + "';";
             ResultSet rs = stmt.executeQuery(sql);
-            if(rs.next())return rs.getInt("ID");
+            if(rs.next()) return rs.getInt("ID");
             else return -3; //未找到返回-3
         } catch( Exception e ) {
             return -2;
         }
     }
 
-    boolean create_map(String title,int type) { //已建立连接情况下，新建词条表，并在主表中添加索引（需保证即将创建的表不存在）
-        if(c == null && stmt == null)return false;
+    boolean create_map(String title, int type) { //已建立连接情况下，新建词条表，并在主表中添加索引（需保证即将创建的表不存在）
+        if(c == null && stmt == null) return false;
 
         try {
             int length = length("__MAIN_TABLE") + 1;
@@ -123,7 +123,7 @@ public class Database {
         return true;
     }
 
-    boolean insert(long groupId,String title,String content,int type,StringBuilder ErrorInfo) { //向title词条插入新内容content，返回错误信息ErrorInfo
+    boolean insert(long groupId, String title, String content, int type, StringBuilder ErrorInfo) { //向title词条插入新内容content，返回错误信息ErrorInfo
         if(!connect(groupId)) {
             ErrorInfo.append("数据库连接失败！");
             return false;
@@ -160,7 +160,7 @@ public class Database {
         return true;
     }
 
-    String query(long groupId,int id,StringBuilder ErrorInfo) {
+    String query(long groupId, int id, StringBuilder ErrorInfo) {
         if(!connect(groupId)) {
             ErrorInfo.append("数据库连接失败！");
             return null;

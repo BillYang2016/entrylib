@@ -57,11 +57,13 @@ public class UserIO { //用户交互类
                         "  },\n" +
                         "  \"learn\":{\n" +
                         "    \"done\":\"已更新 $1 词条！\",\n" +
+                        "    \"reject\":\"$1 是重要指令或系统保留字段，拒绝对其进行更新！\",\n" +
                         "    \"fail\":\"更新 $1 词条失败！\"\n" +
                         "  },\n" +
                         "  \"view\":{\n" +
                         "    \"reply\":\"$1 的内容如下：\\n--------\\n$2\",\n" +
                         "    \"exist\":\"未找到 $1 相关的词条！\",\n" +
+                        "    \"reject\":\"$1 是重要指令或系统保留字段，拒绝对其进行访问！\",\n" +
                         "    \"error\":\"查询 $1 时出错啦！\"\n" +
                         "  },\n" +
                         "  \"history\":{\n" +
@@ -69,6 +71,7 @@ public class UserIO { //用户交互类
                         "    \"single\":\"版本$1（修改时间：$3）：\\n$2\\n-----\\n\",\n" +
                         "    \"exist\":\"未找到 $1 相关的词条！\",\n" +
                         "    \"empty\":\"$1 词条的第$2页历史结果为空，总计$3页！\",\n" +
+                        "    \"reject\":\"$1 是重要指令或系统保留字段，拒绝对其进行访问！\",\n" +
                         "    \"error\":\"查询 $1 时出错啦！\"\n" +
                         "  },\n" +
                         "  \"search\":{\n" +
@@ -142,7 +145,7 @@ public class UserIO { //用户交互类
 
     String getGlobalConfig(String key) {
         File file = new File(path,"global.json");
-        if(!file.exists())initGlobalConfig();
+        if(!file.exists()) initGlobalConfig();
 
         StringBuffer sb = readFile(file);
 
@@ -181,7 +184,7 @@ public class UserIO { //用户交互类
 
     String parse(String command) {
         File file = new File(path,"input.json");
-        if(!file.exists())initInput();
+        if(!file.exists()) initInput();
 
         StringBuffer sb = readFile(file);
 
@@ -199,7 +202,7 @@ public class UserIO { //用户交互类
 
     String formatString(GroupMessageEvent g, String fType, String sType, String... args) {
         File file = new File(path,"output.json");
-        if(!file.exists())initOutput();
+        if(!file.exists()) initOutput();
 
         StringBuffer sb = readFile(file);
 
@@ -221,12 +224,12 @@ public class UserIO { //用户交互类
     Message format(GroupMessageEvent g, String fType, String sType, String... args) {
         String answer = formatString(g, fType, sType, args);
 
-        if(answer == null)return null;
+        if(answer == null) return null;
 
         Message reply;
         int replyMode = getReplyMode();
-        if(replyMode == 0)reply = new PlainText(answer);
-        else if(replyMode == 1)reply = new At(g.getSender().getId()).plus(answer);
+        if(replyMode == 0) reply = new PlainText(answer);
+        else if(replyMode == 1) reply = new At(g.getSender().getId()).plus(answer);
         else reply = new QuoteReply(g.getSource()).plus(answer);
 
         return reply;

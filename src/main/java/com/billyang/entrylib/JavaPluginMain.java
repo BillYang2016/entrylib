@@ -6,6 +6,7 @@ import net.mamoe.mirai.contact.MemberPermission;
 import net.mamoe.mirai.event.GlobalEventChannel;
 import net.mamoe.mirai.event.events.FriendMessageEvent;
 import net.mamoe.mirai.event.events.GroupMessageEvent;
+import net.mamoe.mirai.message.data.Message;
 
 import java.util.Collections;
 import java.util.List;
@@ -21,7 +22,7 @@ build.gradle.kts里改依赖库和插件版本
 public final class JavaPluginMain extends JavaPlugin {
     public static final JavaPluginMain INSTANCE = new JavaPluginMain();
     private JavaPluginMain() {
-        super(new JvmPluginDescriptionBuilder("EntryLib", "0.1.5")
+        super(new JvmPluginDescriptionBuilder("EntryLib", "1.0.0")
                 .id("com.billyang.entrylib")
                 .info("Ask and replay plugin for Mirai-Console")
                 .author("Bill Yang")
@@ -33,44 +34,60 @@ public final class JavaPluginMain extends JavaPlugin {
     UserIO uio = new UserIO();
     EnableGroups eg = new EnableGroups();
 
-    void processLearn(GroupMessageEvent g,String title,String content,int type) {
+    void sendGroupMessage(GroupMessageEvent g, String fType, String sType, String... args) {
+        Message reply = uio.format(g, fType, sType, args);
+        if(reply != null) g.getGroup().sendMessage(reply);
+        else getLogger().error("缺少 (" + fType + "," + sType + ") 字段的交互输出配置，请检查output.json！");
+    }
+
+    void processLearn(GroupMessageEvent g, String title, String content, int type) {
+        if(!Security.checkTitle(uio, title)) {
+            sendGroupMessage(g,"learn", "reject", title);
+            return;
+        }
+
         StringBuilder ErrorInfo = new StringBuilder();
         boolean status = db.insert(g.getGroup().getId(), title, content, type, ErrorInfo); //向数据库插入
 
-        if(status)g.getGroup().sendMessage(uio.format(g,"learn", "done", title));
+        if(status) sendGroupMessage(g,"learn", "done", title);
         else {
-            g.getGroup().sendMessage(uio.format(g,"learn", "fail", title));
+            sendGroupMessage(g,"learn", "fail", title);
             getLogger().warning(String.valueOf(ErrorInfo));
         }
     }
 
-    void processView(GroupMessageEvent g,String title,boolean cancelError) {
+    void processView(GroupMessageEvent g, String title, boolean cancelError) {
+        if(!Security.checkTitle(uio, title)) {
+            sendGroupMessage(g,"view", "reject", title);
+            return;
+        }
+
         MatchValue mv = ml.match(g.getGroup().getId(), title);
         int id = mv.id; //获取匹配到的词条id
         int type = mv.type; //获取匹配到的匹配方式
 
         if(id < 0) { //未找到
-            if(!cancelError)g.getGroup().sendMessage(uio.format(g,"view", "exist", title));
+            if(!cancelError) sendGroupMessage(g,"view", "exist", title);
         } else {
             StringBuilder ErrorInfo = new StringBuilder(); //错误信息
             String content = db.query(g.getGroup().getId(), id, ErrorInfo);
 
             if(content == null) {
                 if(!cancelError) {
-                    g.getGroup().sendMessage(uio.format(g,"view", "error", title));
+                    sendGroupMessage(g,"view", "error", title);
                     getLogger().warning(String.valueOf(ErrorInfo));
                 }
             } else {
-                if(type != 2)g.getGroup().sendMessage(uio.format(g,"view", "reply", title, content));
+                if(type != 2) sendGroupMessage(g,"view", "reply", title, content);
                 else { //处理正则替换内容
                     ErrorInfo = new StringBuilder();
 
                     RegularReplace rr = new RegularReplace(id, mv.title, title, content);
                     content = rr.replace(ErrorInfo); //正则替换
 
-                    if(content != null)g.getGroup().sendMessage(uio.format(g,"view", "reply", title, content));
+                    if(content != null) sendGroupMessage(g,"view", "reply", title, content);
                     else if(!cancelError) {
-                        g.getGroup().sendMessage(uio.format(g,"view", "error", title));
+                        sendGroupMessage(g,"view", "error", title);
                         getLogger().warning(String.valueOf(ErrorInfo));
                     }
                 }
@@ -78,32 +95,37 @@ public final class JavaPluginMain extends JavaPlugin {
         }
     }
 
-    void processHistory(GroupMessageEvent g,String title,int page) {
+    void processHistory(GroupMessageEvent g, String title, int page) {
+        if(!Security.checkTitle(uio, title)) {
+            sendGroupMessage(g,"history", "reject", title);
+            return;
+        }
+
         MatchValue mv = ml.match(g.getGroup().getId(), title);
         int id = mv.id; //获取匹配到的词条id
         int type = mv.type; //获取匹配到的匹配方式
 
         if(id < 0) { //未找到
-            g.getGroup().sendMessage(uio.format(g,"history", "exist", title));
+            sendGroupMessage(g,"history", "exist", title);
         } else {
             StringBuilder ErrorInfo = new StringBuilder(); //错误信息
             List<QueryValue> contentList = db.history(g.getGroup().getId(), id, ErrorInfo); //获取列表
 
             if(contentList == null) {
-                g.getGroup().sendMessage(uio.format(g,"history", "error", title));
+                sendGroupMessage(g,"history", "error", title);
                 getLogger().warning(String.valueOf(ErrorInfo));
             } else {
                 int length = contentList.size(), maxHeight = uio.getHistoryMaxHeight(), maxPage; //计算最大页码
                 try {
                     maxPage = (int) Math.ceil(1.0 * length / maxHeight);
                 } catch (ArithmeticException e) { //除以0
-                    g.getGroup().sendMessage(uio.format(g, "history", "error", title));
+                    sendGroupMessage(g, "history", "error", title);
                     e.printStackTrace();
                     return;
                 }
 
                 if(page > maxPage || page <= 0) { //页码超过范围
-                    g.getGroup().sendMessage(uio.format(g,"history", "empty", title, String.valueOf(page), String.valueOf(maxPage)));
+                    sendGroupMessage(g,"history", "empty", title, String.valueOf(page), String.valueOf(maxPage));
                     return;
                 }
 
@@ -130,7 +152,7 @@ public final class JavaPluginMain extends JavaPlugin {
                         content = rr.replace(ErrorInfo); //正则替换
 
                         if(content == null) {
-                            g.getGroup().sendMessage(uio.format(g, "history", "error", title));
+                            sendGroupMessage(g, "history", "error", title);
                             getLogger().warning(String.valueOf(ErrorInfo));
                             i ++;
                             continue;
@@ -142,18 +164,18 @@ public final class JavaPluginMain extends JavaPlugin {
 
                     i ++;
                 }
-                if(!reply.toString().equals(""))g.getGroup().sendMessage(uio.format(g,"history", "reply", title, reply.toString(), String.valueOf(page), String.valueOf(maxPage)));
-                else g.getGroup().sendMessage(uio.format(g,"history", "empty", title, String.valueOf(page)));
+                if(!reply.toString().equals("")) sendGroupMessage(g,"history", "reply", title, reply.toString(), String.valueOf(page), String.valueOf(maxPage));
+                else sendGroupMessage(g,"history", "empty", title, String.valueOf(page));
             }
         }
     }
 
-    void processSearch(GroupMessageEvent g,String keyword,int page) {
+    void processSearch(GroupMessageEvent g, String keyword, int page) {
         List<MatchValue> list = ml.search(g.getGroup().getId(), keyword);
         StringBuilder reply = new StringBuilder();
 
         if(list.isEmpty()) { //未找到结果
-            g.getGroup().sendMessage(uio.format(g,"search", "exist", keyword));
+            sendGroupMessage(g,"search", "exist", keyword);
             return;
         }
 
@@ -162,13 +184,13 @@ public final class JavaPluginMain extends JavaPlugin {
         try {
             maxPage = (int) Math.ceil(1.0 * length / maxHeight);
         } catch (ArithmeticException e) { //除以0
-            g.getGroup().sendMessage(uio.format(g, "search", "error", keyword));
+            sendGroupMessage(g, "search", "error", keyword);
             e.printStackTrace();
             return;
         }
 
         if(page > maxPage || page <= 0) { //页码超过范围
-            g.getGroup().sendMessage(uio.format(g,"search", "empty", keyword, String.valueOf(page), String.valueOf(maxPage)));
+            sendGroupMessage(g,"search", "empty", keyword, String.valueOf(page), String.valueOf(maxPage));
             return;
         }
 
@@ -193,15 +215,15 @@ public final class JavaPluginMain extends JavaPlugin {
 
             i ++;
         }
-        g.getGroup().sendMessage(uio.format(g,"search", "reply", keyword, reply.toString(), String.valueOf(page), String.valueOf(maxPage)));
+        sendGroupMessage(g,"search", "reply", keyword, reply.toString(), String.valueOf(page), String.valueOf(maxPage));
     }
 
-    void processAll(GroupMessageEvent g,int page) {
+    void processAll(GroupMessageEvent g, int page) {
         List<MatchValue> list = ml.all(g.getGroup().getId());
         StringBuilder reply = new StringBuilder();
 
         if(list.isEmpty()) { //未找到结果
-            g.getGroup().sendMessage(uio.format(g,"all", "exist"));
+            sendGroupMessage(g,"all", "exist");
             return;
         }
 
@@ -210,13 +232,13 @@ public final class JavaPluginMain extends JavaPlugin {
         try {
             maxPage = (int) Math.ceil(1.0 * length / maxHeight);
         } catch (ArithmeticException e) { //除以0
-            g.getGroup().sendMessage(uio.format(g, "all", "error"));
+            sendGroupMessage(g, "all", "error");
             e.printStackTrace();
             return;
         }
 
         if(page > maxPage || page <= 0) { //页码超过范围
-            g.getGroup().sendMessage(uio.format(g,"all", "empty", String.valueOf(page), String.valueOf(maxPage)));
+            sendGroupMessage(g,"all", "empty", String.valueOf(page), String.valueOf(maxPage));
             return;
         }
 
@@ -241,7 +263,7 @@ public final class JavaPluginMain extends JavaPlugin {
 
             i ++;
         }
-        g.getGroup().sendMessage(uio.format(g,"all", "reply", reply.toString(), String.valueOf(page), String.valueOf(maxPage)));
+        sendGroupMessage(g,"all", "reply", reply.toString(), String.valueOf(page), String.valueOf(maxPage));
     }
 
     @Override
@@ -269,19 +291,19 @@ public final class JavaPluginMain extends JavaPlugin {
                 if(!uio.getSwitchPermission() || g.getSender().getPermission() != MemberPermission.MEMBER) { //权限判断
                     if(command.equals("switch-on")) {
                         getLogger().info("Got Input Command: " + command);
-                        if(eg.turnOn(g.getGroup().getId()))g.getGroup().sendMessage(uio.format(g,"switch", "on"));
-                        else g.getGroup().sendMessage(uio.format(g,"switch", "error"));
+                        if(eg.turnOn(g.getGroup().getId())) sendGroupMessage(g,"switch", "on");
+                        else sendGroupMessage(g,"switch", "error");
                         return;
                     } else if(command.equals("switch-off")) {
                         getLogger().info("Got Input Command: " + command);
-                        if(eg.turnOff(g.getGroup().getId()))g.getGroup().sendMessage(uio.format(g,"switch", "off"));
-                        else g.getGroup().sendMessage(uio.format(g,"switch", "error"));
+                        if(eg.turnOff(g.getGroup().getId())) sendGroupMessage(g,"switch", "off");
+                        else sendGroupMessage(g,"switch", "error");
                         return;
                     }
                 }
             }
 
-            if(!eg.check(g.getGroup().getId()))return; //开关未开启，不执行反馈
+            if(!eg.check(g.getGroup().getId())) return; //开关未开启，不执行反馈
 
             if(command != null && command.equals("all")) { //搜索全部类命令
                 getLogger().info("Got Input Command: " + command);
@@ -304,7 +326,7 @@ public final class JavaPluginMain extends JavaPlugin {
             if(uio.getViewMode()) { //查询模式为1，忽略命令格式
                 if(splitedMsg.length >= 2) { //检查是否构成其他格式
                     command = uio.parse(splitedMsg[0]);
-                    if(command != null)getLogger().info("Got Input Command: " + command);
+                    if(command != null) getLogger().info("Got Input Command: " + command);
                     else {
                         processView(g, msg,true);
                         return;
@@ -318,13 +340,13 @@ public final class JavaPluginMain extends JavaPlugin {
                 if(splitedMsg.length < 2) return; //不构成命令格式
 
                 command = uio.parse(splitedMsg[0]);
-                if(command != null)getLogger().info("Got Input Command: " + command);
+                if(command != null) getLogger().info("Got Input Command: " + command);
             }
 
             if(command == null) return; //无对应命令
             else if(command.equals("learn")) { //学习类命令
 
-                if(splitedMsg.length < 3)return; //命令格式错误
+                if(splitedMsg.length < 3) return; //命令格式错误
 
                 String title = splitedMsg[1]; //词条名
                 String content = splitedMsg[2]; //词条内容

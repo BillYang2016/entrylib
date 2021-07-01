@@ -12,7 +12,7 @@ class MatchValue {
     String title;
     int type;
 
-    MatchValue(int id,String title,int type) {
+    MatchValue(int id, String title, int type) {
         this.id = id;
         this.title = title;
         this.type = type;
@@ -20,7 +20,7 @@ class MatchValue {
 }
 
 class MatchValueComparator implements Comparator<MatchValue> {
-    public int compare(MatchValue a,MatchValue b) {
+    public int compare(MatchValue a, MatchValue b) {
         if(a.id < b.id) return -1; //先按照id排序
         if(a.id > b.id) return 1;
         if(a.type < b.type) return -1; //再按照查找方式排序
@@ -158,7 +158,7 @@ public class MatchLoader {
     }
 
     static List<MatchValue> unique (List<MatchValue> list) {
-        if(list.isEmpty())return list;
+        if(list.isEmpty()) return list;
 
         Collections.sort(list,new MatchValueComparator());
 
