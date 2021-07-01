@@ -71,9 +71,11 @@ public class UserIO { //用户交互类
                         "    \"error\":\"查询 $1 时出错啦！\"\n" +
                         "  },\n" +
                         "  \"search\":{\n" +
-                        "    \"reply\":\"根据 $1 搜索到如下词条：\\n$2\",\n" +
-                        "    \"single\":\"- $1\",\n" +
+                        "    \"reply\":\"根据 $1 搜索到如下词条：（第$3/$4页）\\n$2\",\n" +
+                        "    \"single\":\"- $1\\n\",\n" +
+                        "    \"single-regex\":\"- $1（正则）\\n\",\n" +
                         "    \"exist\":\"未找到 $1 相关的词条！\",\n" +
+                        "    \"empty\":\"$1 的第$2页搜索结果为空，总计$3页！\",\n" +
                         "    \"error\":\"查询 $1 时出错啦！\"\n" +
                         "  }\n" +
                         "}"
@@ -101,6 +103,7 @@ public class UserIO { //用户交互类
                         "  \"default-switch\":1,\n" +
                         "  \"switch-permission\":1,\n" +
                         "  \"history-max-height\":3,\n" +
+                        "  \"search-max-height\":5,\n" +
                         "  \"reply-mode\":0\n" +
                         "}"
                 );
@@ -158,6 +161,8 @@ public class UserIO { //用户交互类
     int getHistoryMaxHeight() {
         return Integer.parseInt(getGlobalConfig("history-max-height"));
     }
+
+    int getSearchMaxHeight() {return Integer.parseInt(getGlobalConfig("search-max-height"));}
 
     int getReplyMode() {
         return Integer.parseInt(getGlobalConfig("reply-mode"));

@@ -9,6 +9,7 @@ class QueryValue {
     int id;
     String content;
     String time;
+
     QueryValue(int id,String content,String time) {
         this.id = id;
         this.content = content;

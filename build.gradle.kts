@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "com.billyang"
-version = "0.1.4"
+version = "0.1.5"
 
 repositories {
     maven{ url =uri("https://maven.aliyun.com/nexus/content/groups/public/")}

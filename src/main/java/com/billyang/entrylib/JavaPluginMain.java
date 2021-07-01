@@ -21,7 +21,7 @@ build.gradle.kts里改依赖库和插件版本
 public final class JavaPluginMain extends JavaPlugin {
     public static final JavaPluginMain INSTANCE = new JavaPluginMain();
     private JavaPluginMain() {
-        super(new JvmPluginDescriptionBuilder("EntryLib", "0.1.4")
+        super(new JvmPluginDescriptionBuilder("EntryLib", "0.1.5")
                 .id("com.billyang.entrylib")
                 .info("Ask and replay plugin for Mirai-Console")
                 .author("Bill Yang")
@@ -45,7 +45,7 @@ public final class JavaPluginMain extends JavaPlugin {
     }
 
     void processView(GroupMessageEvent g,String title,boolean cancelError) {
-        MatchValue mv = ml.match(g.getGroup().getId(),title);
+        MatchValue mv = ml.match(g.getGroup().getId(), title);
         int id = mv.id; //获取匹配到的词条id
         int type = mv.type; //获取匹配到的匹配方式
 
@@ -79,7 +79,7 @@ public final class JavaPluginMain extends JavaPlugin {
     }
 
     void processHistory(GroupMessageEvent g,String title,int page) {
-        MatchValue mv = ml.match(g.getGroup().getId(),title);
+        MatchValue mv = ml.match(g.getGroup().getId(), title);
         int id = mv.id; //获取匹配到的词条id
         int type = mv.type; //获取匹配到的匹配方式
 
@@ -97,6 +97,7 @@ public final class JavaPluginMain extends JavaPlugin {
                 try {
                     maxPage = (int) Math.ceil(1.0 * length / maxHeight);
                 } catch (ArithmeticException e) { //除以0
+                    g.getGroup().sendMessage(uio.format(g, "history", "error", title));
                     e.printStackTrace();
                     return;
                 }
@@ -111,15 +112,17 @@ public final class JavaPluginMain extends JavaPlugin {
 
                 Collections.reverse(contentList); //翻转列表
 
-                for(QueryValue qv : contentList) {
+                for(QueryValue qv : contentList) { //依次格式化单条
                     if(i < begin) { //跳转至页首
                         i ++;
                         continue;
                     }
                     if(i >= end) break; //越过页尾
+
                     int versionId = qv.id;
                     String content = qv.content;
                     String time = qv.time;
+
                     if(type == 2) { //处理正则替换内容
                         ErrorInfo = new StringBuilder();
 
@@ -133,14 +136,63 @@ public final class JavaPluginMain extends JavaPlugin {
                             continue;
                         }
                     }
+
                     String single = uio.formatString(g,"history", "single", String.valueOf(versionId), content, time);
                     reply.append(single);
+
                     i ++;
                 }
                 if(!reply.toString().equals(""))g.getGroup().sendMessage(uio.format(g,"history", "reply", title, reply.toString(), String.valueOf(page), String.valueOf(maxPage)));
                 else g.getGroup().sendMessage(uio.format(g,"history", "empty", title, String.valueOf(page)));
             }
         }
+    }
+
+    void processSearch(GroupMessageEvent g,String keyword,int page) {
+        List<MatchValue> list = ml.search(g.getGroup().getId(), keyword);
+        StringBuilder reply = new StringBuilder();
+
+        if(list.isEmpty()) { //未找到结果
+            g.getGroup().sendMessage(uio.format(g,"search", "exist", keyword));
+            return;
+        }
+
+        int length = list.size(), maxHeight = uio.getSearchMaxHeight(), maxPage; //计算最大页码
+
+        try {
+            maxPage = (int) Math.ceil(1.0 * length / maxHeight);
+        } catch (ArithmeticException e) { //除以0
+            g.getGroup().sendMessage(uio.format(g, "search", "error", keyword));
+            e.printStackTrace();
+            return;
+        }
+
+        if(page > maxPage || page <= 0) { //页码超过范围
+            g.getGroup().sendMessage(uio.format(g,"search", "empty", keyword, String.valueOf(page), String.valueOf(maxPage)));
+            return;
+        }
+
+        int i = 0, begin = (page - 1) * maxHeight, end = page * maxHeight; //计算页数对应的编号始末
+
+        for(MatchValue mv : list) { //依次格式化单条
+            if(i < begin) { //跳转至页首
+                i ++;
+                continue;
+            }
+            if(i >= end) break; //越过页尾
+
+            String title = mv.title;
+            int type = mv.type;
+            String single;
+
+            if(type != 2) single = uio.formatString(g,"search", "single", title);
+            else single = uio.formatString(g,"search", "single-regex", title);
+
+            reply.append(single);
+
+            i ++;
+        }
+        g.getGroup().sendMessage(uio.format(g,"search", "reply", keyword, reply.toString(), String.valueOf(page), String.valueOf(maxPage)));
     }
 
     @Override
@@ -250,9 +302,18 @@ public final class JavaPluginMain extends JavaPlugin {
 
             } else if(command.equals("search")) { //搜索类命令
 
-                String keyword = splitedMsg[1]; //关键词
-                String reply = ml.search(keyword); //标准化词条名
-                g.getGroup().sendMessage(uio.format(g,"search", "reply", keyword, reply));
+                int page = 1;
+
+                if(splitedMsg.length > 2) {
+                    try { //尝试转换为数字
+                        splitedMsg[2] = splitedMsg[2].trim();
+                        page = Integer.parseInt(splitedMsg[2]);
+                    } catch (Exception e) {
+                        page = 1; //转换失败
+                    }
+                }
+
+                processSearch(g, splitedMsg[1],page);
 
             }
 
