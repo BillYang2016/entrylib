@@ -106,7 +106,7 @@ EntryLib 是一个基于 [Mirai-Console](https://github.com/mamoe/mirai-console)
 本配置项提供用户键入指令的配置  
 实质为键值对，键为用户输入，值为指令识别参数，请对照[基本指令列表](#基本指令列表)进行查看  
 可以增加新的键值对来提供新的指令  
-默认内容请查看[这里]([这里](https://github.com/BillYang2016/entrylib/blob/main/src/main/resources/input.json))
+默认内容请查看[这里](https://github.com/BillYang2016/entrylib/blob/main/src/main/resources/input.json)
 
 ## `output.json`
 本配置项提供插件回复项的配置  
