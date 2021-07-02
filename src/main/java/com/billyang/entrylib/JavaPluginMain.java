@@ -207,9 +207,9 @@ public final class JavaPluginMain extends JavaPlugin {
             int type = mv.type;
             String single;
 
-            if(type == 0) single = uio.formatString("search", "single", title);
+            if(type == 2) single = uio.formatString("search", "single-regex", title);
             else if(type == 1) single = uio.formatString("search", "single-fuzzy", title);
-            else single = uio.formatString("search", "single-regex", title);
+            else single = uio.formatString("search", "single", title);
 
             reply.append(single);
 
@@ -255,9 +255,9 @@ public final class JavaPluginMain extends JavaPlugin {
             int type = mv.type;
             String single;
 
-            if(type == 0) single = uio.formatString("all", "single", title);
+            if(type == 2) single = uio.formatString("all", "single-regex", title);
             else if(type == 1) single = uio.formatString("all", "single-fuzzy", title);
-            else single = uio.formatString("all", "single-regex", title);
+            else single = uio.formatString("all", "single", title);
 
             reply.append(single);
 
