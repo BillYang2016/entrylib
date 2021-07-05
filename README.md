@@ -62,6 +62,16 @@ EntryLib 是一个基于 [Mirai-Console](https://github.com/mamoe/mirai-console)
 **作用：查看词条修改历史**  
 *例：历史#词条库*  
 
+## "删除#[词条名]"
+**作用：删除词条**  
+*例：删除#词条库*  
+
+### 理想回复
+![](/images/delete-reply.png)  
+## "历史#[词条名]#[页码]"
+**作用：查看词条修改历史**  
+*例：历史#词条库*  
+
 ### 理想回复
 ![](/images/history-reply.png)  
 ### 格式说明
@@ -94,6 +104,7 @@ EntryLib 是一个基于 [Mirai-Console](https://github.com/mamoe/mirai-console)
 3. 本插件的指令与回复均可自定义，详见[配置项](#配置项)
 4. 如果将回复配置为空，插件将不会发送消息
 5. 拒绝以`__MAIN_TABLE`、开关指令、全部指令为词条名的修改与访问，插件将会检测并作出反馈
+6. 删除命令的默认权限为管理员以上才可使用，因为不同于更新为空，一旦词条被删除，它的所有历史备份均被删除，且不会再出现在搜索结果中
 
 # 配置项
 配置项位于`Mirai\data\EntryLib\`文件夹中
