@@ -58,10 +58,6 @@ EntryLib 是一个基于 [Mirai-Console](https://github.com/mamoe/mirai-console)
 
 ### 理想回复
 ![](/images/view-reply.png)  
-## "历史#[词条名]#[页码]"
-**作用：查看词条修改历史**  
-*例：历史#词条库*  
-
 ## "删除#[词条名]"
 **作用：删除词条**  
 *例：删除#词条库*  
