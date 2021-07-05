@@ -3,14 +3,10 @@ package com.billyang.entrylib;
 import com.alibaba.fastjson.JSONObject;
 import net.mamoe.mirai.console.plugin.jvm.JavaPlugin;
 import net.mamoe.mirai.event.events.GroupMessageEvent;
-import net.mamoe.mirai.message.data.At;
-import net.mamoe.mirai.message.data.Message;
-import net.mamoe.mirai.message.data.PlainText;
-import net.mamoe.mirai.message.data.QuoteReply;
+import net.mamoe.mirai.message.data.*;
 
 import java.io.*;
 import java.util.Map;
-import java.util.Set;
 
 public class UserIO { //用户交互类
 
@@ -112,27 +108,19 @@ public class UserIO { //用户交互类
         return null;
     }
 
-    boolean getViewMode() {
-        return getGlobalConfig("view-mode").equals("1");
-    }
+    boolean getViewMode() {return getGlobalConfig("view-mode").equals("1");}
 
-    boolean getDefaultSwitch() {
-        return getGlobalConfig("default-switch").equals("1");
-    }
+    boolean getDefaultSwitch() {return getGlobalConfig("default-switch").equals("1");}
 
-    boolean getSwitchPermission() {
-        return getGlobalConfig("switch-permission").equals("1");
-    }
+    boolean getSwitchPermission() {return getGlobalConfig("switch-permission").equals("1");}
 
-    int getHistoryMaxHeight() {
-        return Integer.parseInt(getGlobalConfig("history-max-height"));
-    }
+    boolean getDownloadMode() {return getGlobalConfig("download-image").equals("1");}
+
+    int getHistoryMaxHeight() {return Integer.parseInt(getGlobalConfig("history-max-height"));}
 
     int getSearchMaxHeight() {return Integer.parseInt(getGlobalConfig("search-max-height"));}
 
-    int getReplyMode() {
-        return Integer.parseInt(getGlobalConfig("reply-mode"));
-    }
+    int getReplyMode() {return Integer.parseInt(getGlobalConfig("reply-mode"));}
 
     String parse(String command) {
         File file = new File(path,"input.json");
@@ -183,6 +171,16 @@ public class UserIO { //用户交互类
         if(replyMode == 0) reply = new PlainText(answer);
         else if(replyMode == 1) reply = new At(g.getSender().getId()).plus(answer);
         else reply = new QuoteReply(g.getSource()).plus(answer);
+
+        return reply;
+    }
+
+    Message format(GroupMessageEvent g, MessageChain msgChain) {
+        Message reply;
+        int replyMode = getReplyMode();
+        if(replyMode == 0) reply = msgChain;
+        else if(replyMode == 1) reply = new At(g.getSender().getId()).plus(msgChain);
+        else reply = new QuoteReply(g.getSource()).plus(msgChain);
 
         return reply;
     }

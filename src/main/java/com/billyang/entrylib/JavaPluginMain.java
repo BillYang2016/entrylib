@@ -1,12 +1,13 @@
 package com.billyang.entrylib;
 
+import net.mamoe.mirai.IMirai;
 import net.mamoe.mirai.console.plugin.jvm.JavaPlugin;
 import net.mamoe.mirai.console.plugin.jvm.JvmPluginDescriptionBuilder;
 import net.mamoe.mirai.contact.MemberPermission;
 import net.mamoe.mirai.event.GlobalEventChannel;
 import net.mamoe.mirai.event.events.FriendMessageEvent;
 import net.mamoe.mirai.event.events.GroupMessageEvent;
-import net.mamoe.mirai.message.data.Message;
+import net.mamoe.mirai.message.data.*;
 
 import java.util.Collections;
 import java.util.List;
@@ -22,7 +23,7 @@ build.gradle.kts里改依赖库和插件版本
 public final class JavaPluginMain extends JavaPlugin {
     public static final JavaPluginMain INSTANCE = new JavaPluginMain();
     private JavaPluginMain() {
-        super(new JvmPluginDescriptionBuilder("EntryLib", "1.0.0")
+        super(new JvmPluginDescriptionBuilder("EntryLib", "1.0.1")
                 .id("com.billyang.entrylib")
                 .info("Ask and replay plugin for Mirai-Console")
                 .author("Bill Yang")
@@ -33,11 +34,15 @@ public final class JavaPluginMain extends JavaPlugin {
     MatchLoader ml = new MatchLoader();
     UserIO uio = new UserIO();
     EnableGroups eg = new EnableGroups();
+    ImageProcesser ip = new ImageProcesser();
 
     void sendGroupMessage(GroupMessageEvent g, String fType, String sType, String... args) {
-        Message reply = uio.format(g, fType, sType, args);
-        if(reply != null) g.getGroup().sendMessage(reply);
-        else getLogger().error("缺少 (" + fType + "," + sType + ") 字段的交互输出配置，请检查output.json！");
+        String reply = uio.formatString(fType, sType, args);
+        if(reply != null) {
+            MessageChain msgChain = ip.PlainText2Image(g, reply); //图片反转义
+            Message msg = uio.format(g, msgChain);
+            g.getGroup().sendMessage(msg);
+        } else getLogger().error("缺少 (" + fType + "," + sType + ") 字段的交互输出配置，请检查output.json！");
     }
 
     void processLearn(GroupMessageEvent g, String title, String content, int type) {
@@ -280,6 +285,7 @@ public final class JavaPluginMain extends JavaPlugin {
         ml.init(db); //初始化匹配器
         uio.init(this, DataFolderPath); //初始化用户交互
         eg.init(DataFolderPath,uio); //初始化群开关
+        ip.init(DataFolderPath); //初始化图片处理器
 
         getLogger().info("词条插件已加载完成！");
 
@@ -303,6 +309,8 @@ public final class JavaPluginMain extends JavaPlugin {
                 }
             }
 
+            MessageChain msgChain = g.getMessage();
+
             if(!eg.check(g.getGroup().getId())) return; //开关未开启，不执行反馈
 
             if(command != null && command.equals("all")) { //搜索全部类命令
@@ -311,7 +319,9 @@ public final class JavaPluginMain extends JavaPlugin {
                 return;
             }
 
-            String msg = g.getMessage().contentToString();
+            msgChain = ip.Image2PlainText(uio, msgChain); //将图片转义
+
+            String msg = msgChain.contentToString();
 
             msg = msg.replace("\\\\","__ANTI_ESCAPE__");
             msg = msg.replace("\\#","__ESCAPE_CHAR__"); //转义

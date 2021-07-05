@@ -5,7 +5,7 @@ import java.util.regex.Pattern;
 
 public class RegularReplace {
 
-    String pattern,line,answer;
+    String pattern, line, answer;
     int id;
 
     RegularReplace(int id, String pattern, String line, String answer) {
