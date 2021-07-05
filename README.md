@@ -2,7 +2,7 @@
 
 EntryLib 是一个基于 [Mirai-Console](https://github.com/mamoe/mirai-console) 的插件，用于实现群词条、自定义回复或更多功能。
 
-![version](https://img.shields.io/badge/%E5%BD%93%E5%89%8D%E7%89%88%E6%9C%AC-v1.0.0-informational)
+![version](https://img.shields.io/badge/%E5%BD%93%E5%89%8D%E7%89%88%E6%9C%AC-v1.0.1-informational)
 
 ![GitHub issues](https://img.shields.io/github/issues/BillYang2016/entrylib)
 ![GitHub stars](https://img.shields.io/github/stars/BillYang2016/entrylib)
