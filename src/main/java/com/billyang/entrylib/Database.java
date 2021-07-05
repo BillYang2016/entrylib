@@ -33,7 +33,7 @@ public class Database {
 
     public boolean exists(Statement stmt, String table) { //判断表是否存在
         try {
-            stmt.executeQuery("SELECT * FROM " + table);
+            stmt.executeQuery("SELECT * FROM " + table + ";");
             return true;
         } catch (SQLException e) {
             return false;
@@ -92,8 +92,11 @@ public class Database {
         try {
             String sql = "SELECT * FROM __MAIN_TABLE WHERE TITLE='" + title + "';";
             ResultSet rs = stmt.executeQuery(sql);
-            if(rs.next()) return rs.getInt("ID");
-            else return -3; //未找到返回-3
+            if(rs.next()) {
+                int id = rs.getInt("ID");
+                if(exists(stmt, "TABLE_" + id)) return id;
+                else return -3;
+            } else return -3; //未找到返回-3
         } catch( Exception e ) {
             return -2;
         }
@@ -131,7 +134,7 @@ public class Database {
 
         int id = find_id(title);
         if(id == -3)
-            if(!create_map(title,type)) {
+            if(!create_map(title, type)) {
                 close();
                 ErrorInfo.append("无法创建新表！");
                 return false;
@@ -153,6 +156,38 @@ public class Database {
         } catch( Exception e ) {
             close();
             ErrorInfo.append("无法向").append(table).append("词条表中插入数据！");
+            return false;
+        }
+
+        close();
+        return true;
+    }
+
+    boolean delete(long groupId, String title, StringBuilder ErrorInfo) { //向title词条插入新内容content，返回错误信息ErrorInfo
+        if(!connect(groupId)) {
+            ErrorInfo.append("数据库连接失败！");
+            return false;
+        }
+
+        int id = find_id(title);
+        if(id == -3) {
+            close();
+            ErrorInfo.append(title).append(" 词条不存在！");
+            return false;
+        } else if(id < 0) {
+            close();
+            ErrorInfo.append("数据库查询异常！");
+            return false;
+        }
+
+        String table = "TABLE_" + id;
+
+        try {
+            String sql = "DROP TABLE " + table + ";";
+            stmt.executeUpdate(sql);
+        } catch( Exception e ) {
+            close();
+            ErrorInfo.append("无法删除").append(table).append("词条表！");
             return false;
         }
 

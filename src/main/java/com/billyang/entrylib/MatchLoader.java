@@ -48,11 +48,17 @@ public class MatchLoader {
         try {
             String sql = "SELECT * FROM __MAIN_TABLE WHERE instr('" + title + "',TITLE) AND MATCH_MODE=1;"; //模糊匹配
             ResultSet rs = stmt.executeQuery(sql);
-            if(rs.next()) {
+            List<MatchValue> list = new ArrayList<>();
+
+            while(rs.next()) {
                 id = rs.getInt("ID");
                 String target = rs.getString("TITLE");
-                db.close();
-                return new MatchValue(id, target, 1);
+                list.add(new MatchValue(id, target, 1));
+            }
+            rs.close();
+
+            for(MatchValue mv : list) {
+                if(db.exists(stmt, "TABLE_" + mv.id)) return mv;
             }
         } catch( Exception e ) {
             e.printStackTrace();
@@ -61,14 +67,20 @@ public class MatchLoader {
         try {
             String sql = "SELECT * FROM __MAIN_TABLE WHERE MATCH_MODE=2;"; //正则匹配（sqlite不支持，Java手动实现）
             ResultSet rs = stmt.executeQuery(sql);
+            List<MatchValue> list = new ArrayList<>();
+
             while(rs.next()) {
                 String pattern = rs.getString("TITLE");
                 boolean isMatch = Pattern.matches(pattern, title);
                 if(isMatch) {
                     id = rs.getInt("ID");
-                    db.close();
-                    return new MatchValue(id, pattern, 2);
+                    list.add(new MatchValue(id, pattern, 2));
                 }
+            }
+            rs.close();
+
+            for(MatchValue mv : list) {
+                if(db.exists(stmt, "TABLE_" + mv.id)) return mv;
             }
         } catch( Exception e ) {
             e.printStackTrace();
@@ -96,6 +108,7 @@ public class MatchLoader {
                 String target = rs.getString("TITLE");
                 list.add(new MatchValue(id, target, 1));
             }
+            rs.close();
         } catch( Exception e ) {
             e.printStackTrace();
         }
@@ -111,6 +124,7 @@ public class MatchLoader {
                     list.add(new MatchValue(id, pattern, 2));
                 }
             }
+            rs.close();
         } catch( Exception e ) {
             e.printStackTrace();
         }
@@ -123,9 +137,12 @@ public class MatchLoader {
                 String target = rs.getString("TITLE");
                 list.add(new MatchValue(id, target, 3));
             }
+            rs.close();
         } catch( Exception e ) {
             e.printStackTrace();
         }
+
+        list.removeIf(mv -> !db.exists(stmt, "TABLE_" + mv.id));
 
         db.close();
         return unique(list);
@@ -147,10 +164,14 @@ public class MatchLoader {
                 int type = rs.getInt("MATCH_MODE");
                 list.add(new MatchValue(id, target, type));
             }
+            rs.close();
         } catch( Exception e ) {
             e.printStackTrace();
         }
 
+        list.removeIf(mv -> !db.exists(stmt, "TABLE_" + mv.id));
+
+        db.close();
         return list;
     }
 

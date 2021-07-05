@@ -114,6 +114,8 @@ public class UserIO { //用户交互类
 
     boolean getSwitchPermission() {return getGlobalConfig("switch-permission").equals("1");}
 
+    boolean getDeletePermission() {return getGlobalConfig("delete-permission").equals("1");}
+
     boolean getDownloadMode() {return getGlobalConfig("download-image").equals("1");}
 
     int getHistoryMaxHeight() {return Integer.parseInt(getGlobalConfig("history-max-height"));}

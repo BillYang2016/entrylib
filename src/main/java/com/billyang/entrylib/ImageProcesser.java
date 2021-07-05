@@ -71,16 +71,21 @@ public class ImageProcesser {
         return builder.build();
     }
 
+    String regex = "\\[mirai:image:\\{[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}\\}\\..{3,5}]";
+
     MessageChain PlainText2Image(GroupMessageEvent g, String msg) { //图片反转义
         MessageChainBuilder builder = new MessageChainBuilder();
 
-        Pattern pt = Pattern.compile("\\[mirai:image:\\{[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}\\}\\..{3,5}]");
+        Pattern pt = Pattern.compile(regex);
         Matcher mt = pt.matcher(msg);
 
-        while(mt.find()) {
-            int start = mt.start(), end = mt.end();
+        int start, end = 0, lastEnd = 0;
 
-            if(start >= 1) builder.append(new PlainText(msg.substring(0, start)));
+        while(mt.find()) {
+            start = mt.start();
+            end = mt.end();
+
+            if(start >= 1) builder.append(new PlainText(msg.substring(lastEnd, start)));
 
             String imageId = MiraiCode2Id(msg.substring(start, end));
             File file = new File(path, imageId);
@@ -101,10 +106,10 @@ public class ImageProcesser {
                 }
             }
 
-            msg = msg.substring(end);
+            lastEnd = end;
         }
 
-        builder.append(msg);
+        builder.append(new PlainText(msg.substring(end)));
 
         return builder.build();
     }

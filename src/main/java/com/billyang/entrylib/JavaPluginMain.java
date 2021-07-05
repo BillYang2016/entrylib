@@ -38,11 +38,12 @@ public final class JavaPluginMain extends JavaPlugin {
 
     void sendGroupMessage(GroupMessageEvent g, String fType, String sType, String... args) {
         String reply = uio.formatString(fType, sType, args);
-        if(reply != null) {
+        if(reply != null && !reply.isEmpty()) {
             MessageChain msgChain = ip.PlainText2Image(g, reply); //图片反转义
             Message msg = uio.format(g, msgChain);
             g.getGroup().sendMessage(msg);
-        } else getLogger().error("缺少 (" + fType + "," + sType + ") 字段的交互输出配置，请检查output.json！");
+        } else if(reply != null)getLogger().warning("尝试发送空字段，已阻止！");
+        else getLogger().error("缺少 (" + fType + "," + sType + ") 字段的交互输出配置，请检查output.json！");
     }
 
     void processLearn(GroupMessageEvent g, String title, String content, int type) {
@@ -271,6 +272,27 @@ public final class JavaPluginMain extends JavaPlugin {
         sendGroupMessage(g,"all", "reply", reply.toString(), String.valueOf(page), String.valueOf(maxPage));
     }
 
+    void processDelete(GroupMessageEvent g, String title) {
+        if(!Security.checkTitle(uio, title)) {
+            sendGroupMessage(g,"delete", "reject", title);
+            return;
+        }
+
+        if(uio.getDeletePermission() && g.getSender().getPermission() == MemberPermission.MEMBER) { //权限判断
+            sendGroupMessage(g,"delete", "permission");
+            return;
+        }
+
+        StringBuilder ErrorInfo = new StringBuilder(); //错误信息
+        boolean status = db.delete(g.getGroup().getId(), title, ErrorInfo);
+
+        if(!status) {
+            if(ErrorInfo.toString().contains("词条不存在")) sendGroupMessage(g,"delete", "exist", title); //未找到
+            else sendGroupMessage(g,"delete", "fail", title);
+            getLogger().warning(String.valueOf(ErrorInfo));
+        } else sendGroupMessage(g,"delete", "done", title);
+    }
+
     @Override
     public void onEnable() {
 
@@ -418,7 +440,11 @@ public final class JavaPluginMain extends JavaPlugin {
                     //转换失败
                 }
 
-                processAll(g,page);
+                processAll(g, page);
+
+            } else if(command.equals("delete")) { //删除类命令
+
+                processDelete(g, splitedMsg[1]);
 
             }
 
