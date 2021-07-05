@@ -52,6 +52,11 @@ public final class JavaPluginMain extends JavaPlugin {
             return;
         }
 
+        if(uio.getLearnPermission() && g.getSender().getPermission() == MemberPermission.MEMBER) { //权限判断
+            sendGroupMessage(g,"learn", "permission");
+            return;
+        }
+
         StringBuilder ErrorInfo = new StringBuilder();
         boolean status = db.insert(g.getGroup().getId(), title, content, type, ErrorInfo); //向数据库插入
 
@@ -65,6 +70,11 @@ public final class JavaPluginMain extends JavaPlugin {
     void processView(GroupMessageEvent g, String title, boolean cancelError) {
         if(!Security.checkTitle(uio, title)) {
             sendGroupMessage(g,"view", "reject", title);
+            return;
+        }
+
+        if(uio.getViewPermission() && g.getSender().getPermission() == MemberPermission.MEMBER) { //权限判断
+            if(!cancelError) sendGroupMessage(g,"view", "permission");
             return;
         }
 
@@ -104,6 +114,11 @@ public final class JavaPluginMain extends JavaPlugin {
     void processHistory(GroupMessageEvent g, String title, int page) {
         if(!Security.checkTitle(uio, title)) {
             sendGroupMessage(g,"history", "reject", title);
+            return;
+        }
+
+        if(uio.getHistoryPermission() && g.getSender().getPermission() == MemberPermission.MEMBER) { //权限判断
+            sendGroupMessage(g,"history", "permission");
             return;
         }
 
@@ -177,6 +192,11 @@ public final class JavaPluginMain extends JavaPlugin {
     }
 
     void processSearch(GroupMessageEvent g, String keyword, int page) {
+        if(uio.getSearchPermission() && g.getSender().getPermission() == MemberPermission.MEMBER) { //权限判断
+            sendGroupMessage(g,"search", "permission");
+            return;
+        }
+
         List<MatchValue> list = ml.search(g.getGroup().getId(), keyword);
         StringBuilder reply = new StringBuilder();
 
@@ -225,6 +245,11 @@ public final class JavaPluginMain extends JavaPlugin {
     }
 
     void processAll(GroupMessageEvent g, int page) {
+        if(uio.getAllPermission() && g.getSender().getPermission() == MemberPermission.MEMBER) { //权限判断
+            sendGroupMessage(g,"all", "permission");
+            return;
+        }
+
         List<MatchValue> list = ml.all(g.getGroup().getId());
         StringBuilder reply = new StringBuilder();
 

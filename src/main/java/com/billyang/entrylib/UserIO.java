@@ -114,6 +114,16 @@ public class UserIO { //用户交互类
 
     boolean getSwitchPermission() {return getGlobalConfig("switch-permission").equals("1");}
 
+    boolean getLearnPermission() {return getGlobalConfig("learn-permission").equals("1");}
+
+    boolean getViewPermission() {return getGlobalConfig("view-permission").equals("1");}
+
+    boolean getHistoryPermission() {return getGlobalConfig("history-permission").equals("1");}
+
+    boolean getSearchPermission() {return getGlobalConfig("search-permission").equals("1");}
+
+    boolean getAllPermission() {return getGlobalConfig("all-permission").equals("1");}
+
     boolean getDeletePermission() {return getGlobalConfig("delete-permission").equals("1");}
 
     boolean getDownloadMode() {return getGlobalConfig("download-image").equals("1");}
