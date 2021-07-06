@@ -14,7 +14,7 @@ public class UserIO { //用户交互类
     String path;
 
     void loadFile(String fileName) {
-        File file = new File(path,fileName);
+        File file = new File(path, fileName);
         if(!file.exists()) { //如果没有则复制
             try {
                 file.createNewFile();
@@ -58,15 +58,7 @@ public class UserIO { //用户交互类
                     }
                 }
 
-                String config = JsonFormater.format(configJson.toJSONString());
-
-                FileOutputStream fop = new FileOutputStream(file);
-                OutputStreamWriter writer = new OutputStreamWriter(fop,"UTF-8");
-
-                writer.append(config);
-
-                writer.close();
-                fop.close();
+                writeFile(file, configJson.toJSONString());
 
             } catch (Exception e) {
                 e.printStackTrace();
@@ -108,31 +100,48 @@ public class UserIO { //用户交互类
         return null;
     }
 
-    boolean getViewMode() {return getGlobalConfig("view-mode").equals("1");}
+    public void modifyGlobalConfig(String key, int value) {
+        File file = new File(path,"global.json");
+        if(!file.exists()) initGlobalConfig();
 
-    boolean getDefaultSwitch() {return getGlobalConfig("default-switch").equals("1");}
+        StringBuffer sb = readFile(file);
 
-    boolean getSwitchPermission() {return getGlobalConfig("switch-permission").equals("1");}
+        try {
+            JSONObject configJson = JSONObject.parseObject(sb.toString());
 
-    boolean getLearnPermission() {return getGlobalConfig("learn-permission").equals("1");}
+            configJson.put(key, value);
 
-    boolean getViewPermission() {return getGlobalConfig("view-permission").equals("1");}
+            writeFile(file, configJson.toJSONString());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
-    boolean getHistoryPermission() {return getGlobalConfig("history-permission").equals("1");}
+    public boolean getViewMode() {return getGlobalConfig("view-mode").equals("1");}
 
-    boolean getSearchPermission() {return getGlobalConfig("search-permission").equals("1");}
+    public boolean getDefaultSwitch() {return getGlobalConfig("default-switch").equals("1");}
 
-    boolean getAllPermission() {return getGlobalConfig("all-permission").equals("1");}
+    public boolean getSwitchPermission() {return getGlobalConfig("switch-permission").equals("1");}
 
-    boolean getDeletePermission() {return getGlobalConfig("delete-permission").equals("1");}
+    public boolean getLearnPermission() {return getGlobalConfig("learn-permission").equals("1");}
 
-    boolean getDownloadMode() {return getGlobalConfig("download-image").equals("1");}
+    public boolean getViewPermission() {return getGlobalConfig("view-permission").equals("1");}
 
-    int getHistoryMaxHeight() {return Integer.parseInt(getGlobalConfig("history-max-height"));}
+    public boolean getHistoryPermission() {return getGlobalConfig("history-permission").equals("1");}
 
-    int getSearchMaxHeight() {return Integer.parseInt(getGlobalConfig("search-max-height"));}
+    public boolean getSearchPermission() {return getGlobalConfig("search-permission").equals("1");}
 
-    int getReplyMode() {return Integer.parseInt(getGlobalConfig("reply-mode"));}
+    public boolean getAllPermission() {return getGlobalConfig("all-permission").equals("1");}
+
+    public boolean getDeletePermission() {return getGlobalConfig("delete-permission").equals("1");}
+
+    public boolean getDownloadMode() {return getGlobalConfig("download-image").equals("1");}
+
+    public int getHistoryMaxHeight() {return Integer.parseInt(getGlobalConfig("history-max-height"));}
+
+    public int getSearchMaxHeight() {return Integer.parseInt(getGlobalConfig("search-max-height"));}
+
+    public int getReplyMode() {return Integer.parseInt(getGlobalConfig("reply-mode"));}
 
     String parse(String command) {
         File file = new File(path,"input.json");
@@ -209,6 +218,22 @@ public class UserIO { //用户交互类
             e.printStackTrace();
         }
         return sb;
+    }
+
+    static void writeFile(File file, String json) {
+        String config = JsonFormater.format(json);
+
+        try {
+            FileOutputStream fop = new FileOutputStream(file);
+            OutputStreamWriter writer = new OutputStreamWriter(fop,"UTF-8");
+
+            writer.append(config);
+
+            writer.close();
+            fop.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
 }
