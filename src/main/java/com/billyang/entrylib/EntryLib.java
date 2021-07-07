@@ -1,6 +1,6 @@
 package com.billyang.entrylib;
 
-import net.mamoe.mirai.IMirai;
+import com.billyang.entrylib.ui.Tray;
 import net.mamoe.mirai.console.plugin.jvm.JavaPlugin;
 import net.mamoe.mirai.console.plugin.jvm.JvmPluginDescriptionBuilder;
 import net.mamoe.mirai.contact.MemberPermission;
@@ -12,18 +12,10 @@ import net.mamoe.mirai.message.data.*;
 import java.util.Collections;
 import java.util.List;
 
-
-/*
-在settings.gradle.kts里改生成的插件.jar名称
-build.gradle.kts里改依赖库和插件版本
-在主类下的JvmPluginDescription改插件名称，id和版本
-用runmiraikt这个配置可以在ide里运行，不用复制到mcl或其他启动器
- */
-
-public final class JavaPluginMain extends JavaPlugin {
-    public static final JavaPluginMain INSTANCE = new JavaPluginMain();
-    private JavaPluginMain() {
-        super(new JvmPluginDescriptionBuilder("EntryLib", "1.0.1")
+public final class EntryLib extends JavaPlugin {
+    public static final EntryLib INSTANCE = new EntryLib();
+    private EntryLib() {
+        super(new JvmPluginDescriptionBuilder("EntryLib", "1.0.2")
                 .id("com.billyang.entrylib")
                 .info("Ask and replay plugin for Mirai-Console")
                 .author("Bill Yang")
@@ -32,9 +24,10 @@ public final class JavaPluginMain extends JavaPlugin {
 
     Database db = new Database();
     MatchLoader ml = new MatchLoader();
-    UserIO uio = new UserIO();
-    EnableGroups eg = new EnableGroups();
+    public UserIO uio = new UserIO();
+    public EnableGroups eg = new EnableGroups();
     ImageProcesser ip = new ImageProcesser();
+    Tray tray = new Tray();
 
     void sendGroupMessage(GroupMessageEvent g, String fType, String sType, String... args) {
         String reply = uio.formatString(fType, sType, args);
@@ -318,6 +311,10 @@ public final class JavaPluginMain extends JavaPlugin {
         } else sendGroupMessage(g,"delete", "done", title);
     }
 
+    public String getVersion() {
+        return getDescription().getVersion().toString();
+    }
+
     @Override
     public void onEnable() {
 
@@ -333,6 +330,7 @@ public final class JavaPluginMain extends JavaPlugin {
         uio.init(this, DataFolderPath); //初始化用户交互
         eg.init(DataFolderPath,uio); //初始化群开关
         ip.init(DataFolderPath); //初始化图片处理器
+        tray.create(this); //创建托盘
 
         getLogger().info("词条插件已加载完成！");
 
