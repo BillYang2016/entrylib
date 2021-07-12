@@ -134,7 +134,7 @@ public class Database {
     }
 
     /**
-     * 在主表中查询词条名所对应的词条ID TITLE->ID
+     * 在主表中查询词条名所对应的词条ID
      * 返回负数表示异常
      * @param title 词条名
      * @return 词条ID，-1表示未连接数据库，-2表示异常，-3表示未找到

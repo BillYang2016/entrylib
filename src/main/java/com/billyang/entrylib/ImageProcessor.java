@@ -115,7 +115,7 @@ public class ImageProcessor {
     /**
      * 将消息队列中的图片 Mirai 码反转义为图片
      * 根据情况上传图片或请求服务器
-     * 待优化（String -> MessageChain）
+     * 待优化（String 替换为 MessageChain）
      * @param g 原消息事件
      * @param msg 消息队列
      * @return 反转义后的消息队列

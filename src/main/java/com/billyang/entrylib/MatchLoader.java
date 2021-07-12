@@ -30,7 +30,7 @@ class MatchValue {
 
 /**
  * MatchValueComparator 类
- * 比较器，对 Comparator<MatchValue> 接口的实现
+ * 比较器，对 Comparator 接口的实现
  * 使 MatchValue 的顺序为：id 第一关键字从小到大，匹配方式 type 第二关键字
  */
 class MatchValueComparator implements Comparator<MatchValue> {
