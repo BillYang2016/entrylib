@@ -58,7 +58,10 @@ public class MatchLoader {
             rs.close();
 
             for(MatchValue mv : list) {
-                if(db.exists(stmt, "TABLE_" + mv.id)) return mv;
+                if(db.exists(stmt, "TABLE_" + mv.id)) {
+                    db.close();
+                    return mv;
+                }
             }
         } catch( Exception e ) {
             e.printStackTrace();
@@ -80,7 +83,10 @@ public class MatchLoader {
             rs.close();
 
             for(MatchValue mv : list) {
-                if(db.exists(stmt, "TABLE_" + mv.id)) return mv;
+                if(db.exists(stmt, "TABLE_" + mv.id)) {
+                    db.close();
+                    return mv;
+                }
             }
         } catch( Exception e ) {
             e.printStackTrace();
