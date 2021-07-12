@@ -10,12 +10,22 @@ import java.awt.event.MouseEvent;
 import java.io.IOException;
 import java.io.InputStream;
 
+/**
+ * Tray 类
+ * 提供系统托盘图标与菜单服务
+ * @author Bill Yang
+ */
 public class Tray {
 
     EntryLib entrylib;
     private TrayIcon tray = null;
     FloatingWindow fw = null;
 
+    /**
+     * 创建系统托盘与控制台悬浮窗（默认隐藏）
+     * @param entrylib 传递主类提供资源信息
+     * @see FloatingWindow
+     */
     public void create(EntryLib entrylib) {
         this.entrylib = entrylib;
 
@@ -72,6 +82,10 @@ public class Tray {
         } else entrylib.getLogger().error("未找到资源文件icon.jpg，无法生成控制台");
     }
 
+    /**
+     * 移除托盘图标
+     * 未使用
+     */
     public void remove() {
         if(tray != null)SystemTray.getSystemTray().remove(tray);
     }

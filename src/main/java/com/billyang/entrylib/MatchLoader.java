@@ -6,11 +6,21 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.regex.*;
 
+/**
+ * MatchValue 类
+ * 单次匹配的返回类型
+ */
 class MatchValue {
     int id;
     String title;
     int type;
 
+    /**
+     * 构造函数
+     * @param id 词条id
+     * @param title 词条名
+     * @param type 匹配方式
+     */
     MatchValue(int id, String title, int type) {
         this.id = id;
         this.title = title;
@@ -18,23 +28,48 @@ class MatchValue {
     }
 }
 
+/**
+ * MatchValueComparator 类
+ * 比较器，对 Comparator<MatchValue> 接口的实现
+ * 使 MatchValue 的顺序为：id 第一关键字从小到大，匹配方式 type 第二关键字
+ */
 class MatchValueComparator implements Comparator<MatchValue> {
     public int compare(MatchValue a, MatchValue b) {
         if(a.id < b.id) return -1; //先按照id排序
         if(a.id > b.id) return 1;
-        return Integer.compare(a.type, b.type); //再按照查找方式排序
+        return Integer.compare(a.type, b.type); //再按照匹配方式排序
     }
 }
 
+/**
+ * MatchLoader 类
+ * 匹配器，通过数据库实现对词条的匹配
+ * 三类匹配方法：精确（type = 0）、模糊（type = 1）、正则（type = 2）
+ * @author Bill Yang
+ */
 public class MatchLoader {
 
     Database db;
 
+    /**
+     * 初始化
+     * @param db 指定数据库
+     */
     void init(Database db) {
         this.db=db;
     }
 
-    MatchValue match(long groupID, String title) { //返回title匹配到的词条表id与匹配类型
+    /**
+     * 连接群数据库，返回根据词条名匹配到的一条信息
+     * 优化方向：可以直接调用 search，但会降低效率
+     * 开发常见问题：ResultSet 对象统一，根据数据库查询动态改变
+     * @param groupID 群号
+     * @param title 词条名
+     * @return 一个 MatchValue 对象
+     * @see #search(long, String)
+     * @see MatchValue
+     */
+    MatchValue match(long groupID, String title) {
         db.connect(groupID);
 
         Statement stmt = db.stmt;
@@ -96,6 +131,13 @@ public class MatchLoader {
         return new MatchValue(-1,null,-1);
     }
 
+    /**
+     * 连接群数据库，返回根据词条名匹配到的所有信息
+     * @param groupID 群号
+     * @param keyword 词条名
+     * @return 一个 MatchValue 列表
+     * @see MatchValue
+     */
     List<MatchValue> search(long groupID, String keyword) {
         db.connect(groupID);
 
@@ -154,6 +196,12 @@ public class MatchLoader {
         return unique(list);
     }
 
+    /**
+     * 连接群数据库，返回所有词条信息
+     * @param groupID 群号
+     * @return 一个 MatchValue 列表
+     * @see MatchValue
+     */
     List<MatchValue> all(long groupID) {
         db.connect(groupID);
 
@@ -181,6 +229,12 @@ public class MatchLoader {
         return list;
     }
 
+    /**
+     * 对词条列表进行去重
+     * 同样的词条可能有不同的匹配方式导致重复
+     * @param list 词条列表
+     * @return 去重后的词条列表
+     */
     static List<MatchValue> unique (List<MatchValue> list) {
         if(list.isEmpty()) return list;
 

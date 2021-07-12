@@ -5,11 +5,16 @@ import com.billyang.entrylib.UserIO;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
-import java.awt.*;
 import java.awt.event.*;
 import java.io.IOException;
 import java.io.InputStream;
 
+/**
+ * DigitOnlyKeyListener 类
+ * 键盘监视器，对 KeyListener 接口的实现
+ * 实现对非数字字符输入的禁止
+ * @see java.awt.event.KeyListener
+ */
 class DigitOnlyKeyListener implements KeyListener {
 
     @Override
@@ -28,6 +33,11 @@ class DigitOnlyKeyListener implements KeyListener {
     }
 }
 
+/**
+ * FloatingWindow 类
+ * 提供控制台悬浮窗
+ * @author Bill Yang
+ */
 public class FloatingWindow extends JFrame {
 
     EntryLib entrylib;
@@ -35,6 +45,12 @@ public class FloatingWindow extends JFrame {
 
     JTabbedPane tabbedPane = new JTabbedPane();
 
+    /**
+     * 查询选项卡单页空白高度（除去tab栏）
+     * 仅设定与估算，待优化
+     * @param index 选项卡页码
+     * @return 单页空白高度
+     */
     int getPageHeight(int index) {
         int height;
 
@@ -49,6 +65,12 @@ public class FloatingWindow extends JFrame {
         return height - 60;
     }
 
+    /**
+     * 查询选项卡单页空白宽度
+     * 仅设定
+     * @param index 选项卡页码
+     * @return 单页空白宽度
+     */
     int getPageWidth(int index) {
         switch (index) {
             case 1:
@@ -57,6 +79,13 @@ public class FloatingWindow extends JFrame {
         }
     }
 
+    /**
+     * 构造函数
+     * 创建一个新的悬浮窗对象
+     * 一般由 Tray 类创建时发起
+     * @param entrylib 传递主类提供资源信息
+     * @see Tray
+     */
     public FloatingWindow(EntryLib entrylib) {
         this.entrylib = entrylib;
         uio = entrylib.uio;
@@ -84,7 +113,13 @@ public class FloatingWindow extends JFrame {
         setContentPane(tabbedPane);
     }
 
-    void addGlobalConfigPage() { //全局配置页
+    /**
+     * 向选项卡中添加全局配置页
+     * 需要实现对全局配置的读取、显示、修改、保存
+     * @see UserIO
+     * @see UserIO#modifyGlobalConfig(String, int)
+     */
+    void addGlobalConfigPage() {
         JPanel panel = new JPanel();
 
         panel.setLayout(null);

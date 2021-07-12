@@ -7,11 +7,19 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 
-public class EnableGroups { //群开关
+/**
+ * EnableGroups 类
+ * 对群开关进行控制
+ * @author Bill Yang
+ */
+public class EnableGroups {
 
     String path;
     UserIO uio;
 
+    /**
+     * 初始化群开关文件
+     */
     void initFile() {
         File file = new File(path,"switch.json");
         if(!file.exists()) {
@@ -33,6 +41,11 @@ public class EnableGroups { //群开关
         }
     }
 
+    /**
+     * 初始化
+     * @param path 提供数据路径
+     * @param uio 提供用户配置
+     */
     void init(String path, UserIO uio) {
         this.path = path;
         this.uio = uio;
@@ -41,6 +54,13 @@ public class EnableGroups { //群开关
 
     }
 
+    /**
+     * 检查某群开关是否开启
+     * 默认值根据全局配置决定
+     * @param groupId 群号
+     * @return 开关状态
+     * @see UserIO#getDefaultSwitch()
+     */
     boolean check(long groupId) {
         File file = new File(path,"switch.json");
         if(!file.exists()) initFile();
@@ -61,6 +81,12 @@ public class EnableGroups { //群开关
         return uio.getDefaultSwitch();
     }
 
+    /**
+     * 修改开关
+     * @param groupId 群号
+     * @param mode 目标值
+     * @return 修改情况
+     */
     boolean turn(long groupId, boolean mode) {
         File file = new File(path,"switch.json");
         if(!file.exists()) initFile();
@@ -89,10 +115,22 @@ public class EnableGroups { //群开关
         return true;
     }
 
+    /**
+     * 开启某群开关
+     * @param groupId 群号
+     * @return 开启状态
+     * @see #turn(long, boolean)
+     */
     boolean turnOn(long groupId) {
         return turn(groupId,true);
     }
 
+    /**
+     * 关闭某群开关
+     * @param groupId 群号
+     * @return 开启状态
+     * @see #turn(long, boolean)
+     */
     boolean turnOff(long groupId) {
         return turn(groupId,false);
     }

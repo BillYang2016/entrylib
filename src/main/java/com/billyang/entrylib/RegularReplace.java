@@ -3,11 +3,23 @@ package com.billyang.entrylib;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * RegularReplace 类
+ * 提供对正则匹配替换进行处理的方法
+ * @author Bill Yang
+ */
 public class RegularReplace {
 
     String pattern, line, answer;
     int id;
 
+    /**
+     * 构造函数
+     * @param id 词条id（未使用）
+     * @param pattern 模式串（原词条名）
+     * @param line 主串（匹配词条名）
+     * @param answer 回复（词条内容）
+     */
     RegularReplace(int id, String pattern, String line, String answer) {
         this.id = id;
         this.pattern = pattern;
@@ -15,6 +27,11 @@ public class RegularReplace {
         this.answer = answer;
     }
 
+    /**
+     * 对本对象进行正则替换处理
+     * @param ErrorInfo 传递错误信息
+     * @return 返回替换完成的回复（词条内容）
+     */
     String replace(StringBuilder ErrorInfo) {
 
         Pattern pt = Pattern.compile(pattern);

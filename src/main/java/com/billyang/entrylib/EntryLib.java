@@ -12,6 +12,11 @@ import net.mamoe.mirai.message.data.*;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * 主类 EntryLib
+ * 提供 Mirai 框架通信以及消息交互
+ * @author Bill Yang
+ */
 public final class EntryLib extends JavaPlugin {
     public static final EntryLib INSTANCE = new EntryLib();
     private EntryLib() {
@@ -26,9 +31,19 @@ public final class EntryLib extends JavaPlugin {
     MatchLoader ml = new MatchLoader();
     public UserIO uio = new UserIO();
     public EnableGroups eg = new EnableGroups();
-    ImageProcesser ip = new ImageProcesser();
+    ImageProcessor ip = new ImageProcessor();
     Tray tray = new Tray();
 
+    /**
+     * sendGroupMessage 方法向群发送一条消息
+     * 通过 fType 与 sType 对消息类型进行定位
+     * 传递 args 参数给 UserIO 类的 format 方法进行加工
+     * @param g 正在被处理的消息事件
+     * @param fType 发送消息的第一类型
+     * @param sType 发送消息的第二类型
+     * @param args 消息参数
+     * @see UserIO#format(GroupMessageEvent, MessageChain) 
+     */
     void sendGroupMessage(GroupMessageEvent g, String fType, String sType, String... args) {
         String reply = uio.formatString(fType, sType, args);
         if(reply != null && !reply.isEmpty()) {
@@ -39,6 +54,17 @@ public final class EntryLib extends JavaPlugin {
         else getLogger().error("缺少 (" + fType + "," + sType + ") 字段的交互输出配置，请检查output.json！");
     }
 
+    /**
+     * processLearn 对 learn 类指令进行处理
+     * 向数据库插入内容
+     * 向对应群发送处理结果
+     * @param g 正在被处理的消息事件
+     * @param title 新词条名
+     * @param content 新词条内容
+     * @param type 匹配方式
+     * @see #sendGroupMessage(GroupMessageEvent, String, String, String...) 
+     * @see Database#insert(long, String, String, int, StringBuilder) 
+     */
     void processLearn(GroupMessageEvent g, String title, String content, int type) {
         if(!Security.checkTitle(uio, title)) {
             sendGroupMessage(g,"learn", "reject", title);
@@ -60,6 +86,19 @@ public final class EntryLib extends JavaPlugin {
         }
     }
 
+    /**
+     * processView 对 view 类指令进行处理
+     * 通过匹配器获得匹配的词条ID
+     * 从数据库查询ID词条内容并发送到群中
+     * 基于传参决定是否发送错误信息
+     * 对于频繁查询，需要省略错误信息
+     * @param g 正在被处理的消息事件
+     * @param title 查询词条名
+     * @param cancelError 是否取消错误反馈
+     * @see #sendGroupMessage(GroupMessageEvent, String, String, String...)
+     * @see MatchLoader#match(long, String) 
+     * @see Database#query(long, int, StringBuilder)
+     */
     void processView(GroupMessageEvent g, String title, boolean cancelError) {
         if(!Security.checkTitle(uio, title)) {
             sendGroupMessage(g,"view", "reject", title);
@@ -104,6 +143,18 @@ public final class EntryLib extends JavaPlugin {
         }
     }
 
+    /**
+     * processHistory 对 history 类指令进行处理
+     * 通过匹配器获得匹配的词条ID
+     * 从数据库查询ID词条历史内容并发送到群中
+     * 根据 page 决定发送的项以缩减内容长度
+     * @param g 正在被处理的消息事件
+     * @param title 查询词条名
+     * @param page 查询的页数/页码
+     * @see #sendGroupMessage(GroupMessageEvent, String, String, String...)
+     * @see MatchLoader#match(long, String)
+     * @see Database#history(long, int, StringBuilder)
+     */
     void processHistory(GroupMessageEvent g, String title, int page) {
         if(!Security.checkTitle(uio, title)) {
             sendGroupMessage(g,"history", "reject", title);
@@ -184,6 +235,16 @@ public final class EntryLib extends JavaPlugin {
         }
     }
 
+    /**
+     * processSearch 对 search 类指令进行处理
+     * 通过匹配器获得匹配的所有词条
+     * 根据 page 决定发送的项以缩减内容长度
+     * @param g 正在被处理的消息事件
+     * @param keyword 查询的关键词
+     * @param page 查询的页数/页码
+     * @see #sendGroupMessage(GroupMessageEvent, String, String, String...)
+     * @see MatchLoader#search(long, String)
+     */
     void processSearch(GroupMessageEvent g, String keyword, int page) {
         if(uio.getSearchPermission() && g.getSender().getPermission() == MemberPermission.MEMBER) { //权限判断
             sendGroupMessage(g,"search", "permission");
@@ -237,6 +298,15 @@ public final class EntryLib extends JavaPlugin {
         sendGroupMessage(g,"search", "reply", keyword, reply.toString(), String.valueOf(page), String.valueOf(maxPage));
     }
 
+    /**
+     * processAll 对 all 类指令进行处理
+     * 通过匹配器获得所有词条
+     * 根据 page 决定发送的项以缩减内容长度
+     * @param g 正在被处理的消息事件
+     * @param page 查询的页数/页码
+     * @see #sendGroupMessage(GroupMessageEvent, String, String, String...)
+     * @see MatchLoader#all(long)
+     */
     void processAll(GroupMessageEvent g, int page) {
         if(uio.getAllPermission() && g.getSender().getPermission() == MemberPermission.MEMBER) { //权限判断
             sendGroupMessage(g,"all", "permission");
@@ -290,6 +360,14 @@ public final class EntryLib extends JavaPlugin {
         sendGroupMessage(g,"all", "reply", reply.toString(), String.valueOf(page), String.valueOf(maxPage));
     }
 
+    /**
+     * processDelete 对 delete 类指令进行处理
+     * 向数据库请求删除词条
+     * @param g 正在被处理的消息事件
+     * @param title 即将被删除的词条名
+     * @see #sendGroupMessage(GroupMessageEvent, String, String, String...)
+     * @see Database#delete(long, String, StringBuilder)
+     */
     void processDelete(GroupMessageEvent g, String title) {
         if(!Security.checkTitle(uio, title)) {
             sendGroupMessage(g,"delete", "reject", title);
@@ -311,10 +389,17 @@ public final class EntryLib extends JavaPlugin {
         } else sendGroupMessage(g,"delete", "done", title);
     }
 
+    /**
+     * 获取 EntryLib 插件版本
+     * @return 返回版本号
+     */
     public String getVersion() {
         return getDescription().getVersion().toString();
     }
 
+    /**
+     * 插件启用事件
+     */
     @Override
     public void onEnable() {
 
@@ -334,7 +419,10 @@ public final class EntryLib extends JavaPlugin {
 
         getLogger().info("词条插件已加载完成！");
 
-        GlobalEventChannel.INSTANCE.subscribeAlways(GroupMessageEvent.class, g -> { //监听群消息
+        /*
+          持续监听群消息
+         */
+        GlobalEventChannel.INSTANCE.subscribeAlways(GroupMessageEvent.class, g -> {
 
             String command = uio.parse(g.getMessage().contentToString()); //全局指令解析
 
@@ -473,7 +561,10 @@ public final class EntryLib extends JavaPlugin {
 
         });
 
-        GlobalEventChannel.INSTANCE.subscribeAlways(FriendMessageEvent.class, f -> { //监听好友消息
+        /*
+          持续监听好友消息
+         */
+        GlobalEventChannel.INSTANCE.subscribeAlways(FriendMessageEvent.class, f -> {
             //待开发
         });
     }

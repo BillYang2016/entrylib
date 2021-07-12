@@ -1,7 +1,18 @@
 package com.billyang.entrylib;
 
+/**
+ * Security 类
+ * 实现安全校验
+ * @author Bill Yang
+ */
 public class Security {
-   static boolean checkTitle(UserIO uio, String title) {
+    /**
+     * 检查词条名是否合法
+     * @param uio 提供用户配置
+     * @param title 词条名
+     * @return 合法状态
+     */
+    static boolean checkTitle(UserIO uio, String title) {
         if(title.toUpperCase().equals("__MAIN_TABLE")) return false; //与主表名相同
 
         String command = uio.parse(title);

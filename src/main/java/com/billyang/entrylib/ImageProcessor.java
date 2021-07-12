@@ -9,10 +9,20 @@ import java.net.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class ImageProcesser {
+/**
+ * ImageProcessor 类
+ * 图片处理器
+ * 实现对图片进行转义与反转义
+ * @author Bill Yang
+ */
+public class ImageProcessor {
 
     String path;
 
+    /**
+     * 初始化
+     * @param path 提供数据路径
+     */
     void init(String path) {
         this.path = path + "/images/";
 
@@ -22,6 +32,13 @@ public class ImageProcesser {
         }
     }
 
+    /**
+     * 下载一个图片
+     * 根据图片本身包含的下载地址，缓存到插件目录中
+     * @param img 图片文件
+     * @return 下载成功或否
+     * @see Image
+     */
     boolean downloadImage(Image img) {
         String imageId = img.getImageId();
 
@@ -48,10 +65,28 @@ public class ImageProcesser {
         return false;
     }
 
+    /**
+     * 将图片 ID 转化为 Mirai 码
+     * @param Id 图片 ID
+     * @return Mirai 码
+     */
     String Id2MiraiCode(String Id) {return "[mirai:image:" + Id + "]";}
 
+    /**
+     * 将图片 Mirai 码转化为 图片 ID
+     * @param code Mirai 码
+     * @return 图片 ID
+     */
     String MiraiCode2Id(String code) {return code.replace("[mirai:image:", "").replace("]","");}
 
+    /**
+     * 将消息队列中的图片转义为作为 Mirai 码的字符串
+     * 根据用户配置决定是否本地缓存图片
+     * @param uio 用户配置
+     * @param msgChain 消息队列
+     * @return 转义后的消息队列
+     * @see UserIO#getDownloadMode()
+     */
     MessageChain Image2PlainText(UserIO uio, MessageChain msgChain) { //图片转义
         MessageChainBuilder builder = new MessageChainBuilder();
 
@@ -71,8 +106,20 @@ public class ImageProcesser {
         return builder.build();
     }
 
+    /**
+     * 图片 Mirai 码的正则匹配式
+     * @see Image
+     */
     String regex = "\\[mirai:image:\\{[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}\\}\\..{3,5}]";
 
+    /**
+     * 将消息队列中的图片 Mirai 码反转义为图片
+     * 根据情况上传图片或请求服务器
+     * 待优化（String -> MessageChain）
+     * @param g 原消息事件
+     * @param msg 消息队列
+     * @return 反转义后的消息队列
+     */
     MessageChain PlainText2Image(GroupMessageEvent g, String msg) { //图片反转义
         MessageChainBuilder builder = new MessageChainBuilder();
 
