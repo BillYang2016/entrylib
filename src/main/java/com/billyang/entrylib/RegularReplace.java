@@ -22,7 +22,10 @@ public class RegularReplace {
 
         if(mt.find()) {
             int size = mt.groupCount();
-            for(int i = 1; i <= size; i++)answer = answer.replace("$" + i, mt.group(i));
+            for(int i = 1; i <= size; i++) {
+                String target = mt.group(i);
+                if(target != null) answer = answer.replace("$" + i, target);
+            }
             return answer;
         } else {
             ErrorInfo.append("正则替换时失配！\n");

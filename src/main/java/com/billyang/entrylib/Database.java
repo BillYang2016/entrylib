@@ -36,6 +36,7 @@ public class Database {
             stmt.executeQuery("SELECT * FROM " + table + ";");
             return true;
         } catch (SQLException e) {
+            //e.printStackTrace();
             return false;
         }
     }
@@ -58,6 +59,7 @@ public class Database {
                 stmt.executeUpdate(sql);
             }
         } catch( Exception e ) {
+            e.printStackTrace();
             return false;
         }
         return true;
@@ -68,20 +70,22 @@ public class Database {
             stmt.close();
             c.close();
         } catch( Exception e ) {
+            e.printStackTrace();
             return false;
         }
         return true;
     }
 
-    int length(String table) { //查询表项数 返回负数表示异常
+    int max_id(String table) { //查询表现有最大id，返回负数表示异常
         if(c == null && stmt == null)return -1;
 
         try {
-            String sql = "SELECT count(*) as length from " + table + ";";
+            String sql = "SELECT MAX(ID) as maxID from " + table + ";";
             ResultSet rs = stmt.executeQuery(sql);
-            if(rs.next()) return rs.getInt("length");
+            if(rs.next()) return rs.getInt("maxID");
             else return -3;
         } catch( Exception e ) {
+            e.printStackTrace();
             return -2;
         }
     }
@@ -98,6 +102,7 @@ public class Database {
                 else return -3;
             } else return -3; //未找到返回-3
         } catch( Exception e ) {
+            e.printStackTrace();
             return -2;
         }
     }
@@ -106,13 +111,13 @@ public class Database {
         if(c == null && stmt == null) return false;
 
         try {
-            int length = length("__MAIN_TABLE") + 1;
+            int id = max_id("__MAIN_TABLE") + 1;
 
             String sql = "INSERT INTO __MAIN_TABLE (ID,TITLE,MATCH_MODE) " +
-                         "VALUES (" + length + ",'" + title + "'," + type + ");";
+                         "VALUES (" + id + ",'" + title + "'," + type + ");";
             stmt.executeUpdate(sql); //主表添加索引
 
-            sql = "CREATE TABLE TABLE_" + length +
+            sql = "CREATE TABLE TABLE_" + id +
                   "(ID         INT            PRIMARY KEY NOT NULL," +                          //版本号
                   " CONTENT    nvarchar(1000) ," +                                              //内容
                   " TS         TIMESTAMP      NOT NULL DEFAULT (datetime('now','localtime')))"  //时间
@@ -120,6 +125,7 @@ public class Database {
             stmt.executeUpdate(sql); //创建新表
 
         } catch( Exception e ) {
+            e.printStackTrace();
             return false;
         }
 
@@ -138,7 +144,7 @@ public class Database {
                 close();
                 ErrorInfo.append("无法创建新表！");
                 return false;
-            } else id = length("__MAIN_TABLE");
+            } else id = max_id("__MAIN_TABLE");
         else if(id < 0) {
             close();
             ErrorInfo.append("数据库查询异常！");
@@ -146,16 +152,17 @@ public class Database {
         }
 
         String table = "TABLE_" + id;
-        int length = length(table) + 1;
+        int tableId = max_id(table) + 1;
 
         try {
             String sql = "INSERT INTO " + table + " (ID,CONTENT)" +
-                         "VALUES (" + length + ",'" + content +"');"
+                         "VALUES (" + tableId + ",'" + content +"');"
                     ;
             stmt.executeUpdate(sql);
         } catch( Exception e ) {
-            close();
             ErrorInfo.append("无法向").append(table).append("词条表中插入数据！");
+            e.printStackTrace();
+            close();
             return false;
         }
 
@@ -180,14 +187,25 @@ public class Database {
             return false;
         }
 
+        try {
+            String sql = "DELETE FROM __MAIN_TABLE WHERE ID = " + id + ";";
+            stmt.executeUpdate(sql);
+        } catch( Exception e ) {
+            ErrorInfo.append("无法删除主表行！");
+            e.printStackTrace();
+            close();
+            return false;
+        }
+
         String table = "TABLE_" + id;
 
         try {
             String sql = "DROP TABLE " + table + ";";
             stmt.executeUpdate(sql);
         } catch( Exception e ) {
-            close();
             ErrorInfo.append("无法删除").append(table).append("词条表！");
+            e.printStackTrace();
+            close();
             return false;
         }
 
@@ -202,10 +220,10 @@ public class Database {
         }
 
         String table = "TABLE_" + id;
-        int length = length(table);
+        int tableId = max_id(table);
 
         try {
-            String sql = "SELECT * FROM " + table + " WHERE ID=" + length + ";";
+            String sql = "SELECT * FROM " + table + " WHERE ID=" + tableId + ";";
             ResultSet rs = stmt.executeQuery(sql);
             if(rs.next()) {
                 String content = rs.getString("CONTENT");
@@ -217,8 +235,9 @@ public class Database {
                 return null;
             }
         } catch( Exception e ) {
-            close();
             ErrorInfo.append("无法在").append(table).append("词条表中查询数据！");
+            e.printStackTrace();
+            close();
             return null;
         }
     }
@@ -244,8 +263,9 @@ public class Database {
                 list.add(qv);
             }
         } catch( Exception e ) {
-            close();
             ErrorInfo.append("无法在").append(table).append("词条表中查询数据！");
+            e.printStackTrace();
+            close();
             return null;
         }
 
