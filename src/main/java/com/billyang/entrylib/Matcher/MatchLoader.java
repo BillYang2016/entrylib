@@ -1,4 +1,6 @@
-package com.billyang.entrylib;
+package com.billyang.entrylib.Matcher;
+
+import com.billyang.entrylib.Database.Database;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -7,37 +9,15 @@ import java.util.List;
 import java.util.regex.*;
 
 /**
- * MatchValue 类
- * 单次匹配的返回类型
- */
-class MatchValue {
-    int id;
-    String title;
-    int type;
-
-    /**
-     * 构造函数
-     * @param id 词条id
-     * @param title 词条名
-     * @param type 匹配方式
-     */
-    MatchValue(int id, String title, int type) {
-        this.id = id;
-        this.title = title;
-        this.type = type;
-    }
-}
-
-/**
  * MatchValueComparator 类
  * 比较器，对 Comparator 接口的实现
  * 使 MatchValue 的顺序为：id 第一关键字从小到大，匹配方式 type 第二关键字
  */
 class MatchValueComparator implements Comparator<MatchValue> {
     public int compare(MatchValue a, MatchValue b) {
-        if(a.id < b.id) return -1; //先按照id排序
-        if(a.id > b.id) return 1;
-        return Integer.compare(a.type, b.type); //再按照匹配方式排序
+        if(a.getId() < b.getId()) return -1; //先按照id排序
+        if(a.getId() > b.getId()) return 1;
+        return Integer.compare(a.getType(), b.getType()); //再按照匹配方式排序
     }
 }
 
@@ -55,7 +35,7 @@ public class MatchLoader {
      * 初始化
      * @param db 指定数据库
      */
-    void init(Database db) {
+    public void init(Database db) {
         this.db=db;
     }
 
@@ -69,7 +49,7 @@ public class MatchLoader {
      * @see #search(long, String)
      * @see MatchValue
      */
-    MatchValue match(long groupID, String title) {
+    public MatchValue match(long groupID, String title) {
         db.connect(groupID);
 
         Statement stmt = db.stmt;
@@ -93,7 +73,7 @@ public class MatchLoader {
             rs.close();
 
             for(MatchValue mv : list) {
-                if(db.exists(stmt, "TABLE_" + mv.id)) {
+                if(db.exists(stmt, "TABLE_" + mv.getId())) {
                     db.close();
                     return mv;
                 }
@@ -118,7 +98,7 @@ public class MatchLoader {
             rs.close();
 
             for(MatchValue mv : list) {
-                if(db.exists(stmt, "TABLE_" + mv.id)) {
+                if(db.exists(stmt, "TABLE_" + mv.getId())) {
                     db.close();
                     return mv;
                 }
@@ -138,7 +118,7 @@ public class MatchLoader {
      * @return 一个 MatchValue 列表
      * @see MatchValue
      */
-    List<MatchValue> search(long groupID, String keyword) {
+    public List<MatchValue> search(long groupID, String keyword) {
         db.connect(groupID);
 
         Statement stmt = db.stmt;
@@ -190,7 +170,7 @@ public class MatchLoader {
             e.printStackTrace();
         }
 
-        list.removeIf(mv -> !db.exists(stmt, "TABLE_" + mv.id));
+        list.removeIf(mv -> !db.exists(stmt, "TABLE_" + mv.getId()));
 
         db.close();
         return unique(list);
@@ -202,7 +182,7 @@ public class MatchLoader {
      * @return 一个 MatchValue 列表
      * @see MatchValue
      */
-    List<MatchValue> all(long groupID) {
+    public List<MatchValue> all(long groupID) {
         db.connect(groupID);
 
         Statement stmt = db.stmt;
@@ -223,7 +203,7 @@ public class MatchLoader {
             e.printStackTrace();
         }
 
-        list.removeIf(mv -> !db.exists(stmt, "TABLE_" + mv.id));
+        list.removeIf(mv -> !db.exists(stmt, "TABLE_" + mv.getId()));
 
         db.close();
         return list;
@@ -244,8 +224,8 @@ public class MatchLoader {
         int lastId = -1;
 
         for(MatchValue mv : list) {
-            if(mv.id != lastId) uniqueList.add(mv);
-            lastId = mv.id;
+            if(mv.getId() != lastId) uniqueList.add(mv);
+            lastId = mv.getId();
         }
 
         return uniqueList;

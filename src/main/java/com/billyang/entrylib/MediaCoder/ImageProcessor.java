@@ -1,5 +1,6 @@
-package com.billyang.entrylib;
+package com.billyang.entrylib.MediaCoder;
 
+import com.billyang.entrylib.Config.UserIO;
 import net.mamoe.mirai.contact.Contact;
 import net.mamoe.mirai.event.events.GroupMessageEvent;
 import net.mamoe.mirai.message.data.*;
@@ -23,7 +24,7 @@ public class ImageProcessor {
      * 初始化
      * @param path 提供数据路径
      */
-    void init(String path) {
+    public void init(String path) {
         this.path = path + "/images/";
 
         File file = new File(this.path);
@@ -87,7 +88,7 @@ public class ImageProcessor {
      * @return 转义后的消息队列
      * @see UserIO#getDownloadMode()
      */
-    MessageChain Image2PlainText(UserIO uio, MessageChain msgChain) { //图片转义
+    public MessageChain Image2PlainText(UserIO uio, MessageChain msgChain) { //图片转义
         MessageChainBuilder builder = new MessageChainBuilder();
 
         boolean download = uio.getDownloadMode(); //查询下载选项
@@ -120,7 +121,7 @@ public class ImageProcessor {
      * @param msg 消息队列
      * @return 反转义后的消息队列
      */
-    MessageChain PlainText2Image(GroupMessageEvent g, String msg) { //图片反转义
+    public MessageChain PlainText2Image(GroupMessageEvent g, String msg) { //图片反转义
         MessageChainBuilder builder = new MessageChainBuilder();
 
         Pattern pt = Pattern.compile(regex);

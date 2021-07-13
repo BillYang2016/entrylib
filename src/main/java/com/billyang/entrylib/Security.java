@@ -1,5 +1,7 @@
 package com.billyang.entrylib;
 
+import com.billyang.entrylib.Config.UserIO;
+
 /**
  * Security 类
  * 实现安全校验

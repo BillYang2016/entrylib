@@ -1,4 +1,4 @@
-package com.billyang.entrylib;
+package com.billyang.entrylib.Config;
 
 import com.alibaba.fastjson.JSONObject;
 
@@ -46,7 +46,7 @@ public class EnableGroups {
      * @param path 提供数据路径
      * @param uio 提供用户配置
      */
-    void init(String path, UserIO uio) {
+    public void init(String path, UserIO uio) {
         this.path = path;
         this.uio = uio;
 
@@ -61,7 +61,7 @@ public class EnableGroups {
      * @return 开关状态
      * @see UserIO#getDefaultSwitch()
      */
-    boolean check(long groupId) {
+    public boolean check(long groupId) {
         File file = new File(path,"switch.json");
         if(!file.exists()) initFile();
 
@@ -121,7 +121,7 @@ public class EnableGroups {
      * @return 开启状态
      * @see #turn(long, boolean)
      */
-    boolean turnOn(long groupId) {
+    public boolean turnOn(long groupId) {
         return turn(groupId,true);
     }
 
@@ -131,7 +131,7 @@ public class EnableGroups {
      * @return 开启状态
      * @see #turn(long, boolean)
      */
-    boolean turnOff(long groupId) {
+    public boolean turnOff(long groupId) {
         return turn(groupId,false);
     }
 

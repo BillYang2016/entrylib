@@ -1,11 +1,12 @@
 package com.billyang.entrylib.ui;
 
+import com.billyang.entrylib.Config.UserIO;
 import com.billyang.entrylib.EntryLib;
-import com.billyang.entrylib.UserIO;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.event.*;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -58,6 +59,9 @@ public class FloatingWindow extends JFrame {
             case 1:
                 height = 350;
                 break;
+            case 2:
+                height = 200;
+                break;
             default:
                 height = 300;
         }
@@ -107,6 +111,7 @@ public class FloatingWindow extends JFrame {
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
         addGlobalConfigPage();
+        addPackageLeadingPage();
 
         tabbedPane.setSelectedIndex(0);
 
@@ -285,4 +290,58 @@ public class FloatingWindow extends JFrame {
         }
     }
 
+    void addPackageLeadingPage() {
+        JPanel panel = new JPanel();
+
+        panel.setLayout(null);
+        int height = getPageHeight(2), width = getPageWidth(2);
+        int borderHeight = (height - 10) / 4, contentHeight = borderHeight - 2;
+
+        JLabel label1 = new JLabel("导出模块");
+        JLabel label2 = new JLabel("群号");
+
+        JTextField textField1 = new JTextField();
+        textField1.addKeyListener(new DigitOnlyKeyListener());
+
+        JButton button1 = new JButton("导出词条库");
+        button1.addActionListener(e -> {
+            File file = new File(entrylib.getDataFolder().getAbsolutePath(), "entry-package.json");
+            long groupId;
+
+            try {
+                groupId = Long.parseLong(textField1.getText());
+            } catch (Exception exception) {
+                groupId = 0;
+            }
+
+            File database = new File("data/EntryLib/databases/", groupId + ".db");
+            if(!database.exists()) {
+                JOptionPane.showMessageDialog(
+                        panel, "目标群数据库不存在", "错误", JOptionPane.ERROR_MESSAGE
+                );
+            } else {
+                StringBuilder ErrorInfo = new StringBuilder();
+                if(entrylib.pl.leadOut(entrylib.ml, groupId, file, ErrorInfo)) {
+                    JOptionPane.showMessageDialog(
+                            panel, "导出完成，已导出到 " + file.getAbsolutePath(), "成功", JOptionPane.INFORMATION_MESSAGE
+                    );
+                } else {
+                    JOptionPane.showMessageDialog(
+                            panel, "导出失败\n" + ErrorInfo.toString(), "错误", JOptionPane.ERROR_MESSAGE
+                    );
+                }
+            }
+        });
+
+        label1.setBounds(10, 5, 55, contentHeight);
+        label2.setBounds(10, 5 + borderHeight, 28, contentHeight);
+        textField1.setBounds(50, 5 + borderHeight, 100, contentHeight);
+        button1.setBounds(10, 5 + borderHeight * 2 + 5, 100, contentHeight);
+        panel.add(label1);
+        panel.add(label2);
+        panel.add(textField1);
+        panel.add(button1);
+
+        tabbedPane.addTab("词条库导入导出", panel);
+    }
 }

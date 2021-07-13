@@ -1,6 +1,15 @@
 package com.billyang.entrylib;
 
+import com.billyang.entrylib.Config.EnableGroups;
+import com.billyang.entrylib.Config.UserIO;
+import com.billyang.entrylib.Database.Database;
+import com.billyang.entrylib.Database.QueryValue;
+import com.billyang.entrylib.Matcher.MatchLoader;
+import com.billyang.entrylib.Matcher.MatchValue;
+import com.billyang.entrylib.Matcher.RegularReplace;
+import com.billyang.entrylib.MediaCoder.ImageProcessor;
 import com.billyang.entrylib.ui.Tray;
+import com.billyang.entrylib.EntryPackage.PackageLoader;
 import net.mamoe.mirai.console.plugin.jvm.JavaPlugin;
 import net.mamoe.mirai.console.plugin.jvm.JvmPluginDescriptionBuilder;
 import net.mamoe.mirai.contact.MemberPermission;
@@ -28,10 +37,11 @@ public final class EntryLib extends JavaPlugin {
     }
 
     Database db = new Database();
-    MatchLoader ml = new MatchLoader();
+    public MatchLoader ml = new MatchLoader();
     public UserIO uio = new UserIO();
     public EnableGroups eg = new EnableGroups();
     ImageProcessor ip = new ImageProcessor();
+    public PackageLoader pl = new PackageLoader();
     Tray tray = new Tray();
 
     /**
@@ -111,8 +121,8 @@ public final class EntryLib extends JavaPlugin {
         }
 
         MatchValue mv = ml.match(g.getGroup().getId(), title);
-        int id = mv.id; //获取匹配到的词条id
-        int type = mv.type; //获取匹配到的匹配方式
+        int id = mv.getId(); //获取匹配到的词条id
+        int type = mv.getType(); //获取匹配到的匹配方式
 
         if(id < 0) { //未找到
             if(!cancelError) sendGroupMessage(g,"view", "exist", title);
@@ -130,7 +140,7 @@ public final class EntryLib extends JavaPlugin {
                 else { //处理正则替换内容
                     ErrorInfo = new StringBuilder();
 
-                    RegularReplace rr = new RegularReplace(id, mv.title, title, content);
+                    RegularReplace rr = new RegularReplace(id, mv.getTitle(), title, content);
                     content = rr.replace(ErrorInfo); //正则替换
 
                     if(content != null) sendGroupMessage(g,"view", "reply", title, content);
@@ -167,8 +177,8 @@ public final class EntryLib extends JavaPlugin {
         }
 
         MatchValue mv = ml.match(g.getGroup().getId(), title);
-        int id = mv.id; //获取匹配到的词条id
-        int type = mv.type; //获取匹配到的匹配方式
+        int id = mv.getId(); //获取匹配到的词条id
+        int type = mv.getType(); //获取匹配到的匹配方式
 
         if(id < 0) { //未找到
             sendGroupMessage(g,"history", "exist", title);
@@ -206,14 +216,14 @@ public final class EntryLib extends JavaPlugin {
                     }
                     if(i >= end) break; //越过页尾
 
-                    int versionId = qv.id;
-                    String content = qv.content;
-                    String time = qv.time;
+                    int versionId = qv.getId();
+                    String content = qv.getContent();
+                    String time = qv.getTime();
 
                     if(type == 2) { //处理正则替换内容
                         ErrorInfo = new StringBuilder();
 
-                        RegularReplace rr = new RegularReplace(id, mv.title, title, content);
+                        RegularReplace rr = new RegularReplace(id, mv.getTitle(), title, content);
                         content = rr.replace(ErrorInfo); //正则替换
 
                         if(content == null) {
@@ -283,8 +293,8 @@ public final class EntryLib extends JavaPlugin {
             }
             if(i >= end) break; //越过页尾
 
-            String title = mv.title;
-            int type = mv.type;
+            String title = mv.getTitle();
+            int type = mv.getType();
             String single;
 
             if(type == 2) single = uio.formatString("search", "single-regex", title);
@@ -345,8 +355,8 @@ public final class EntryLib extends JavaPlugin {
             }
             if(i >= end) break; //越过页尾
 
-            String title = mv.title;
-            int type = mv.type;
+            String title = mv.getTitle();
+            int type = mv.getType();
             String single;
 
             if(type == 2) single = uio.formatString("all", "single-regex", title);
@@ -415,6 +425,7 @@ public final class EntryLib extends JavaPlugin {
         uio.init(this, DataFolderPath); //初始化用户交互
         eg.init(DataFolderPath,uio); //初始化群开关
         ip.init(DataFolderPath); //初始化图片处理器
+        pl.init(db);
         tray.create(this); //创建托盘
 
         getLogger().info("词条插件已加载完成！");

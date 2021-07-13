@@ -1,6 +1,7 @@
-package com.billyang.entrylib;
+package com.billyang.entrylib.Config;
 
 import com.alibaba.fastjson.JSONObject;
+import com.billyang.entrylib.JsonFormatter;
 import net.mamoe.mirai.console.plugin.jvm.JavaPlugin;
 import net.mamoe.mirai.event.events.GroupMessageEvent;
 import net.mamoe.mirai.message.data.*;
@@ -97,7 +98,7 @@ public class UserIO {
      * @param jp 传递主类提供资源信息
      * @param path 提供数据路径
      */
-    void init(JavaPlugin jp, String path) {
+    public void init(JavaPlugin jp, String path) {
 
         this.jp = jp;
         this.path = path;
@@ -250,7 +251,7 @@ public class UserIO {
      * @param command 用户输入
      * @return 命令标准格式
      */
-    String parse(String command) {
+    public String parse(String command) {
         File file = new File(path,"input.json");
         if(!file.exists()) initInput();
 
@@ -275,7 +276,7 @@ public class UserIO {
      * @param args 信息参数
      * @return 用户化输出
      */
-    String formatString(String fType, String sType, String... args) {
+    public String formatString(String fType, String sType, String... args) {
         File file = new File(path,"output.json");
         if(!file.exists()) initOutput();
 
@@ -328,7 +329,7 @@ public class UserIO {
      * @see #formatString(String, String, String...)
      * @see Message
      */
-    Message format(GroupMessageEvent g, MessageChain msgChain) {
+    public Message format(GroupMessageEvent g, MessageChain msgChain) {
         Message reply;
         int replyMode = getReplyMode();
         if(replyMode == 0) reply = msgChain;
@@ -343,7 +344,7 @@ public class UserIO {
      * @param file 文件名
      * @return 文件内容
      */
-    static StringBuffer readFile(File file) {
+    public static StringBuffer readFile(File file) {
         StringBuffer sb = null;
         try {
             FileInputStream fip = new FileInputStream(file);
@@ -362,7 +363,7 @@ public class UserIO {
      * @param file 文件名
      * @param json 文件内容
      */
-    static void writeFile(File file, String json) {
+    public static void writeFile(File file, String json) {
         String config = JsonFormatter.format(json);
 
         try {

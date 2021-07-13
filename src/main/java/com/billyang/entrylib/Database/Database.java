@@ -1,31 +1,9 @@
-package com.billyang.entrylib;
+package com.billyang.entrylib.Database;
 
 import java.io.File;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-
-/**
- * QueryValue 类
- * 单次查询的返回类型
- */
-class QueryValue {
-    int id;
-    String content;
-    String time;
-
-    /**
-     * 构造函数
-     * @param id 词条id
-     * @param content 词条内容
-     * @param time 修改时间
-     */
-    QueryValue(int id, String content, String time) {
-        this.id = id;
-        this.content = content;
-        this.time = time;
-    }
-}
 
 /**
  * Database 类
@@ -43,7 +21,7 @@ public class Database {
      * @param path 提供数据路径
      * @return 成功状态
      */
-    boolean init(String path) {
+    public boolean init(String path) {
         RootPath = path;
         File file = new File("data/EntryLib/databases/");
         if(!file.exists()) {
@@ -70,14 +48,14 @@ public class Database {
     }
 
     Connection c = null;
-    Statement stmt = null;
+    public Statement stmt = null;
 
     /**
      * 连接群对应的数据库
      * @param groupId 群号
      * @return 连接情况
      */
-    boolean connect(long groupId) {
+    public boolean connect(long groupId) {
         try {
             Class.forName("org.sqlite.JDBC");
             c = DriverManager.getConnection("jdbc:sqlite:data/EntryLib/databases/" + groupId + ".db");
@@ -102,7 +80,7 @@ public class Database {
      * 关闭数据库连接
      * @return 关闭状态
      */
-    boolean close() {
+    public boolean close() {
         try {
             stmt.close();
             c.close();
@@ -139,7 +117,7 @@ public class Database {
      * @param title 词条名
      * @return 词条ID，-1表示未连接数据库，-2表示异常，-3表示未找到
      */
-    int find_id(String title) {
+    public int find_id(String title) {
         if(c == null && stmt == null) return -1;
 
         try {
@@ -198,7 +176,7 @@ public class Database {
      * @param ErrorInfo 传递错误信息
      * @return 插入状态
      */
-    boolean insert(long groupId, String title, String content, int type, StringBuilder ErrorInfo) { //
+    public boolean insert(long groupId, String title, String content, int type, StringBuilder ErrorInfo) { //
         if(!connect(groupId)) {
             ErrorInfo.append("数据库连接失败！");
             return false;
@@ -244,7 +222,7 @@ public class Database {
      * @param ErrorInfo 传递错误信息
      * @return 删除状态
      */
-    boolean delete(long groupId, String title, StringBuilder ErrorInfo) {
+    public boolean delete(long groupId, String title, StringBuilder ErrorInfo) {
         if(!connect(groupId)) {
             ErrorInfo.append("数据库连接失败！");
             return false;
@@ -295,7 +273,7 @@ public class Database {
      * @param ErrorInfo 传递错误信息
      * @return 词条最新内容
      */
-    String query(long groupId, int id, StringBuilder ErrorInfo) {
+    public String query(long groupId, int id, StringBuilder ErrorInfo) {
         if(!connect(groupId)) {
             ErrorInfo.append("数据库连接失败！");
             return null;
@@ -333,7 +311,7 @@ public class Database {
      * @return 返回一个表，储存所有历史项，每项都是 QueryValue 类型
      * @see QueryValue
      */
-    List<QueryValue> history(long groupId, int id, StringBuilder ErrorInfo) {
+    public List<QueryValue> history(long groupId, int id, StringBuilder ErrorInfo) {
         if(!connect(groupId)) {
             ErrorInfo.append("数据库连接失败！");
             return null;

@@ -1,4 +1,4 @@
-package com.billyang.entrylib;
+package com.billyang.entrylib.Matcher;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -20,7 +20,7 @@ public class RegularReplace {
      * @param line 主串（匹配词条名）
      * @param answer 回复（词条内容）
      */
-    RegularReplace(int id, String pattern, String line, String answer) {
+    public RegularReplace(int id, String pattern, String line, String answer) {
         this.id = id;
         this.pattern = pattern;
         this.line = line;
@@ -32,7 +32,7 @@ public class RegularReplace {
      * @param ErrorInfo 传递错误信息
      * @return 返回替换完成的回复（词条内容）
      */
-    String replace(StringBuilder ErrorInfo) {
+    public String replace(StringBuilder ErrorInfo) {
 
         Pattern pt = Pattern.compile(pattern);
         Matcher mt = pt.matcher(line);
