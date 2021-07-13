@@ -2,7 +2,7 @@
 
 EntryLib 是一个基于 [Mirai-Console](https://github.com/mamoe/mirai-console) 的插件，用于实现群词条、自定义回复或更多功能。
 
-![version](https://img.shields.io/badge/%E5%BD%93%E5%89%8D%E7%89%88%E6%9C%AC-v1.0.1-informational)
+![version](https://img.shields.io/badge/%E5%BD%93%E5%89%8D%E7%89%88%E6%9C%AC-v1.0.2-informational)
 
 ![GitHub issues](https://img.shields.io/github/issues/BillYang2016/entrylib)
 ![GitHub stars](https://img.shields.io/github/stars/BillYang2016/entrylib)
@@ -14,6 +14,7 @@ EntryLib 是一个基于 [Mirai-Console](https://github.com/mamoe/mirai-console)
 - [基本指令列表](#基本指令列表)
 - [额外说明](#额外说明)
 - [配置项](#配置项)
+- [控制台](#控制台)
 - [数据库结构](#数据库结构)
 - [To-Do List](#to-do-list)
 - [插件依赖](#插件依赖)
@@ -133,6 +134,21 @@ EntryLib 是一个基于 [Mirai-Console](https://github.com/mamoe/mirai-console)
 3. "(history,reply)"中`$1`表示词条名，`$2`表示词条历史，`$3/$4`表示 页码/总页数
 4. "(history,single)"表示单条历史格式，其中`$1`表示版本号，`$2`表示版本内容，`$3`表示修改时间
 
+# 控制台
+插件在 Windows 环境下运行时，将会创建系统托盘图标  
+双击图标或点击菜单可以进入插件 GUI 控制台  
+在控制台中可以方便地进行如下操作：
+- 编辑全局配置
+- 词条库导入导出
+
+## 词条库导入导出
+导入导出会根据一个 json 文件进行，这个文件的格式样例可以参考[这里](https://github.com/BillYang2016/entrylib/blob/main/src/main/resources/datapackage-template.json)  
+导出时将会生成上述格式的 json 文件  
+导入时需要提供上述格式的 json 文件，同时可以选择三种覆盖方式：
+1. 不覆盖相同词条
+2. 合并相同词条
+3. 覆盖相同词条
+
 # 数据库结构
 插件采用 sqlite 作为数据库  
 每一个群独立建立数据库，保存为`群号.db`文件  
@@ -146,8 +162,11 @@ EntryLib 是一个基于 [Mirai-Console](https://github.com/mamoe/mirai-console)
 - [x] 指令模块
 - [x] 数据库模块
 - [x] 用户OI
-- [ ] GUI
+- [x] GUI
 - [x] 语义分析
+
+功能模块：
+- [ ] 语音解析
 
 # 插件依赖
 本插件依赖于以下模块：
