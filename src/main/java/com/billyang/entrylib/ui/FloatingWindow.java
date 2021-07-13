@@ -5,6 +5,9 @@ import com.billyang.entrylib.EntryLib;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
@@ -60,7 +63,7 @@ public class FloatingWindow extends JFrame {
                 height = 350;
                 break;
             case 2:
-                height = 200;
+                height = 250;
                 break;
             default:
                 height = 300;
@@ -114,6 +117,13 @@ public class FloatingWindow extends JFrame {
         addPackageLeadingPage();
 
         tabbedPane.setSelectedIndex(0);
+        tabbedPane.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                int index = tabbedPane.getSelectedIndex() + 1;
+                setSize(getPageWidth(index), getPageHeight(index) + 60);
+            }
+        });
 
         setContentPane(tabbedPane);
     }
@@ -202,7 +212,7 @@ public class FloatingWindow extends JFrame {
         });
 
         checkbox1.setBounds(10, 5, 80, contentHeight);
-        checkbox2.setBounds(10, 5 + borderHeight * 1, 80, contentHeight);
+        checkbox2.setBounds(10, 5 + borderHeight, 80, contentHeight);
         checkbox3.setBounds(10, 5 + borderHeight * 2, 80, contentHeight);
         checkbox4.setBounds(10, 5 + borderHeight * 3, 110, contentHeight);
         checkbox5.setBounds(10, 5 + borderHeight * 4, 110, contentHeight);
@@ -295,7 +305,7 @@ public class FloatingWindow extends JFrame {
 
         panel.setLayout(null);
         int height = getPageHeight(2), width = getPageWidth(2);
-        int borderHeight = (height - 10) / 4, contentHeight = borderHeight - 2;
+        int borderHeight = (height - 10) / 5, contentHeight = borderHeight - 2;
 
         JLabel label1 = new JLabel("导出模块");
         JLabel label2 = new JLabel("群号");
@@ -333,15 +343,93 @@ public class FloatingWindow extends JFrame {
             }
         });
 
-        label1.setBounds(10, 5, 55, contentHeight);
+        label1.setBounds(65, 5, 55, contentHeight);
         label2.setBounds(10, 5 + borderHeight, 28, contentHeight);
         textField1.setBounds(50, 5 + borderHeight, 100, contentHeight);
-        button1.setBounds(10, 5 + borderHeight * 2 + 5, 100, contentHeight);
+        button1.setBounds(40, 5 + borderHeight * 2 + 5, 100, contentHeight);
         panel.add(label1);
         panel.add(label2);
         panel.add(textField1);
         panel.add(button1);
 
-        tabbedPane.addTab("词条库导入导出", panel);
+        JSeparator separator = new JSeparator(JSeparator.VERTICAL);
+        separator.setBounds(210, 0, 3, height);
+        panel.add(separator);
+
+        JLabel label3= new JLabel("导入模块");
+        JLabel label4 = new JLabel("群号");
+        JLabel label5 = new JLabel("覆盖选项");
+
+        JTextField textField2 = new JTextField();
+        textField2.addKeyListener(new DigitOnlyKeyListener());
+
+        String[] list = new String[]{"不覆盖相同词条", "合并相同词条", "不覆盖相同词条"};
+        JComboBox<String> comboBox = new JComboBox<>(list);
+        comboBox.setSelectedIndex(0);
+
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY); //只能选择文件
+        fileChooser.setCurrentDirectory(new File(".")); //默认当前文件夹
+        fileChooser.setFileFilter(new FileNameExtensionFilter("json(*.json)", "json")); //扩展名仅json
+
+        JButton button2 = new JButton("导入词条库");
+        button2.addActionListener(e -> {
+            if(textField2.getText() == null || textField2.getText().equals("")) {
+                JOptionPane.showMessageDialog(
+                        panel, "请输入目标群号！", "警告", JOptionPane.WARNING_MESSAGE
+                );
+            } else {
+                long groupId;
+
+                try {
+                    groupId = Long.parseLong(textField2.getText());
+                } catch (Exception exception) {
+                    groupId = 0;
+                }
+
+                int result = fileChooser.showOpenDialog(panel);
+                if(result == JFileChooser.APPROVE_OPTION) { //点击了确定
+                    File file = fileChooser.getSelectedFile();
+                    StringBuilder ErrorInfo = new StringBuilder();
+                    if(entrylib.pl.leadIn(groupId, file, comboBox.getSelectedIndex(), ErrorInfo)) {
+                        JOptionPane.showMessageDialog(
+                                panel, "导入完成！", "成功", JOptionPane.INFORMATION_MESSAGE
+                        );
+                    } else {
+                        JOptionPane.showMessageDialog(
+                                panel, "导入失败\n" + ErrorInfo.toString(), "错误", JOptionPane.ERROR_MESSAGE
+                        );
+                    }
+                }
+            }
+        });
+
+        label3.setBounds(325, 5, 55, contentHeight);
+        label4.setBounds(270, 5 + borderHeight, 28, contentHeight);
+        textField2.setBounds(310, 5 + borderHeight, 100, contentHeight);
+        label5.setBounds(270, 5 + borderHeight * 2, 55, contentHeight);
+        comboBox.setBounds(340, 5 + borderHeight * 2, 130, contentHeight);
+        button2.setBounds(310, 5 + borderHeight * 3 + 5, 100, contentHeight);
+        panel.add(label3);
+        panel.add(label4);
+        panel.add(label5);
+        panel.add(textField2);
+        panel.add(comboBox);
+        panel.add(button2);
+
+        InputStream is = entrylib.getResourceAsStream("file.jpg"); //添加图标
+        if(is == null) {
+            entrylib.getLogger().warning("未找到资源文件file.jpg");
+
+            tabbedPane.addTab("词条库导入导出", panel);
+        } else {
+            try {
+                ImageIcon icon = new ImageIcon(ImageIO.read(is));
+
+                tabbedPane.addTab("词条库导入导出", icon, panel);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 }

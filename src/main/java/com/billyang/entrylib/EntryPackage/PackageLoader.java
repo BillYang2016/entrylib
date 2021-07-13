@@ -64,8 +64,10 @@ public class PackageLoader {
                     for(QueryValue qv: pv.getHistory())db.insert(groupId, pv.getTitle(), qv.getContent(), pv.getMode(), ErrorInfo);
                 }
             } else if(id == -3) {
+                db.close();
                 for(QueryValue qv: pv.getHistory())db.insert(groupId, pv.getTitle(), qv.getContent(), pv.getMode(), ErrorInfo);
             } else {
+                db.close();
                 ErrorInfo.append("导入 ").append(pv.getTitle()).append(" 词条时出错啦！");
                 return false;
             }
