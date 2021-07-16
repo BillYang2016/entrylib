@@ -162,6 +162,13 @@ public class UserIO {
     public boolean getViewMode() {return getGlobalConfig("view-mode").equals("1");}
 
     /**
+     * 获取随机版本回复模式
+     * @return 是否随机版本回复
+     * @see #getGlobalConfig(String)
+     */
+    public boolean getRandomReply() {return getGlobalConfig("random-reply").equals("1");}
+
+    /**
      * 获取默认开关
      * @return 默认开关
      * @see #getGlobalConfig(String)

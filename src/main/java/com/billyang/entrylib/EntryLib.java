@@ -29,7 +29,7 @@ import java.util.List;
 public final class EntryLib extends JavaPlugin {
     public static final EntryLib INSTANCE = new EntryLib();
     private EntryLib() {
-        super(new JvmPluginDescriptionBuilder("EntryLib", "1.0.2")
+        super(new JvmPluginDescriptionBuilder("EntryLib", "1.0.3")
                 .id("com.billyang.entrylib")
                 .info("Ask and replay plugin for Mirai-Console")
                 .author("Bill Yang")
@@ -107,7 +107,7 @@ public final class EntryLib extends JavaPlugin {
      * @param cancelError 是否取消错误反馈
      * @see #sendGroupMessage(GroupMessageEvent, String, String, String...)
      * @see MatchLoader#match(long, String) 
-     * @see Database#query(long, int, StringBuilder)
+     * @see Database#query(long, int, boolean, StringBuilder)
      */
     void processView(GroupMessageEvent g, String title, boolean cancelError) {
         if(!Security.checkTitle(uio, title)) {
@@ -128,7 +128,7 @@ public final class EntryLib extends JavaPlugin {
             if(!cancelError) sendGroupMessage(g,"view", "exist", title);
         } else {
             StringBuilder ErrorInfo = new StringBuilder(); //错误信息
-            String content = db.query(g.getGroup().getId(), id, ErrorInfo);
+            String content = db.query(g.getGroup().getId(), id, uio.getRandomReply(), ErrorInfo);
 
             if(content == null) {
                 if(!cancelError) {

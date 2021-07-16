@@ -4,6 +4,7 @@ import java.io.File;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 /**
  * Database 类
@@ -270,10 +271,11 @@ public class Database {
      * 返回错误信息
      * @param groupId 群号
      * @param id 词条id
+     * @param random 是否随机版本回复
      * @param ErrorInfo 传递错误信息
      * @return 词条最新内容
      */
-    public String query(long groupId, int id, StringBuilder ErrorInfo) {
+    public String query(long groupId, int id, boolean random, StringBuilder ErrorInfo) {
         if(!connect(groupId)) {
             ErrorInfo.append("数据库连接失败！");
             return null;
@@ -281,6 +283,11 @@ public class Database {
 
         String table = "TABLE_" + id;
         int tableId = max_id(table);
+
+        if(random) {
+            Random rd = new Random();
+            tableId = rd.nextInt(tableId) + 1;
+        }
 
         try {
             String sql = "SELECT * FROM " + table + " WHERE ID=" + tableId + ";";
