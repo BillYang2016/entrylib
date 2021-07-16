@@ -204,7 +204,7 @@ public class FloatingWindow extends JFrame {
             uio.modifyGlobalConfig("delete-permission", checkbox.isSelected() ? 1 : 0);
         });
 
-        JCheckBox checkbox10 = new JCheckBox("缓存图片", uio.getDownloadMode());
+        JCheckBox checkbox10 = new JCheckBox("缓存图片", uio.getImageDownloadMode());
         checkbox10.setToolTipText("选中时，将\"download-image\"修改为1，表示缓存接收到的图片。反之，表示不缓存。");
         checkbox10.addChangeListener(e -> {
             JCheckBox checkbox = (JCheckBox) e.getSource();

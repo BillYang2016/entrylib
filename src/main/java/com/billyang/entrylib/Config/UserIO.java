@@ -222,7 +222,7 @@ public class UserIO {
      * @return 图片缓存方式
      * @see #getGlobalConfig(String)
      */
-    public boolean getDownloadMode() {return getGlobalConfig("download-image").equals("1");}
+    public boolean getImageDownloadMode() {return getGlobalConfig("download-image").equals("1");}
 
     /**
      * 获取历史命令最多回复项数

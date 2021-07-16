@@ -86,12 +86,12 @@ public class ImageProcessor {
      * @param uio 用户配置
      * @param msgChain 消息队列
      * @return 转义后的消息队列
-     * @see UserIO#getDownloadMode()
+     * @see UserIO#getImageDownloadMode()
      */
     public MessageChain Image2PlainText(UserIO uio, MessageChain msgChain) { //图片转义
         MessageChainBuilder builder = new MessageChainBuilder();
 
-        boolean download = uio.getDownloadMode(); //查询下载选项
+        boolean download = uio.getImageDownloadMode(); //查询下载选项
 
         for(SingleMessage msg : msgChain) {
             if(msg instanceof Image) {
@@ -121,7 +121,7 @@ public class ImageProcessor {
      * @param msg 消息队列
      * @return 反转义后的消息队列
      */
-    public MessageChain PlainText2Image(GroupMessageEvent g, String msg) { //图片反转义
+    public MessageChain PlainText2Image(GroupMessageEvent g, String msg) {
         MessageChainBuilder builder = new MessageChainBuilder();
 
         Pattern pt = Pattern.compile(regex);
