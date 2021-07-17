@@ -60,7 +60,7 @@ public class FloatingWindow extends JFrame {
 
         switch (index) {
             case 1:
-                height = 350;
+                height = 380;
                 break;
             case 2:
                 height = 250;
@@ -107,7 +107,7 @@ public class FloatingWindow extends JFrame {
         }
 
         setTitle("EntryLib 控制台");
-        setSize(500, 350);
+        setSize(500, 380);
         setLocationRelativeTo(null); //居中
         setResizable(false);
         setAlwaysOnTop(false);
@@ -139,13 +139,20 @@ public class FloatingWindow extends JFrame {
 
         panel.setLayout(null);
         int height = getPageHeight(1), width = getPageWidth(1);
-        int borderHeight = (height - 10) / 13, contentHeight = borderHeight - 2;
+        int borderHeight = (height - 10) / 14, contentHeight = borderHeight - 2;
 
         JCheckBox checkbox1 = new JCheckBox("查看模式", uio.getViewMode());
         checkbox1.setToolTipText("选中时，将\"view-mode\"修改为1，表示可以直接输入词条名来查看词条内容。反之，表示需要输入查看指令才可查看词条内容。");
         checkbox1.addChangeListener(e -> {
             JCheckBox checkbox = (JCheckBox) e.getSource();
             uio.modifyGlobalConfig("view-mode", checkbox.isSelected() ? 1 : 0);
+        });
+
+        JCheckBox checkbox11 = new JCheckBox("随机回复模式", uio.getRandomReply());
+        checkbox11.setToolTipText("选中时，将\"random-reply\"修改为1，表示回复词条内容时从所有历史版本中随机选择。反之，表示回复最新版本内容。");
+        checkbox11.addChangeListener(e -> {
+            JCheckBox checkbox = (JCheckBox) e.getSource();
+            uio.modifyGlobalConfig("random-reply", checkbox.isSelected() ? 1 : 0);
         });
 
         JCheckBox checkbox2 = new JCheckBox("默认开关", uio.getDefaultSwitch());
@@ -212,16 +219,18 @@ public class FloatingWindow extends JFrame {
         });
 
         checkbox1.setBounds(10, 5, 80, contentHeight);
-        checkbox2.setBounds(10, 5 + borderHeight, 80, contentHeight);
-        checkbox3.setBounds(10, 5 + borderHeight * 2, 80, contentHeight);
-        checkbox4.setBounds(10, 5 + borderHeight * 3, 110, contentHeight);
-        checkbox5.setBounds(10, 5 + borderHeight * 4, 110, contentHeight);
-        checkbox6.setBounds(10, 5 + borderHeight * 5, 110, contentHeight);
-        checkbox7.setBounds(10, 5 + borderHeight * 6, 110, contentHeight);
-        checkbox8.setBounds(10, 5 + borderHeight * 7, 130, contentHeight);
-        checkbox9.setBounds(10, 5 + borderHeight * 8, 110, contentHeight);
-        checkbox10.setBounds(10, 5 + borderHeight * 9, 80, contentHeight);
+        checkbox11.setBounds(10, 5 + borderHeight, 110, contentHeight);
+        checkbox2.setBounds(10, 5 + borderHeight * 2, 80, contentHeight);
+        checkbox3.setBounds(10, 5 + borderHeight * 3, 80, contentHeight);
+        checkbox4.setBounds(10, 5 + borderHeight * 4, 110, contentHeight);
+        checkbox5.setBounds(10, 5 + borderHeight * 5, 110, contentHeight);
+        checkbox6.setBounds(10, 5 + borderHeight * 6, 110, contentHeight);
+        checkbox7.setBounds(10, 5 + borderHeight * 7, 110, contentHeight);
+        checkbox8.setBounds(10, 5 + borderHeight * 8, 130, contentHeight);
+        checkbox9.setBounds(10, 5 + borderHeight * 9, 110, contentHeight);
+        checkbox10.setBounds(10, 5 + borderHeight * 10, 80, contentHeight);
         panel.add(checkbox1);
+        panel.add(checkbox11);
         panel.add(checkbox2);
         panel.add(checkbox3);
         panel.add(checkbox4);
@@ -271,12 +280,12 @@ public class FloatingWindow extends JFrame {
             }
         });
 
-        label1.setBounds(10, 5 + borderHeight * 10, 150, contentHeight);
-        textField1.setBounds(label1.getWidth() + 20, 5 + borderHeight * 10, 20, contentHeight);
-        label2.setBounds(10, 5 + borderHeight * 11, 150, contentHeight);
-        textField2.setBounds(label2.getWidth() + 20, 5 + borderHeight * 11, 20, contentHeight);
-        label3.setBounds(10, 5 + borderHeight * 12, 55, contentHeight);
-        textField3.setBounds(label3.getWidth() + 20, 5 + borderHeight * 12, 20, contentHeight);
+        label1.setBounds(10, 5 + borderHeight * 11, 150, contentHeight);
+        textField1.setBounds(label1.getWidth() + 20, 5 + borderHeight * 11, 20, contentHeight);
+        label2.setBounds(10, 5 + borderHeight * 12, 150, contentHeight);
+        textField2.setBounds(label2.getWidth() + 20, 5 + borderHeight * 12, 20, contentHeight);
+        label3.setBounds(10, 5 + borderHeight * 13, 55, contentHeight);
+        textField3.setBounds(label3.getWidth() + 20, 5 + borderHeight * 13, 20, contentHeight);
         panel.add(label1);
         panel.add(textField1);
         panel.add(label2);
