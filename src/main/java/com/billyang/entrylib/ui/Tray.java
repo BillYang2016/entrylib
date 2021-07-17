@@ -29,6 +29,11 @@ public class Tray {
     public void create(EntryLib entrylib) {
         this.entrylib = entrylib;
 
+        if(GraphicsEnvironment.isHeadless()) {
+            entrylib.getLogger().warning("无图形环境，停止图形界面加载");
+            return;
+        }
+
         fw = new FloatingWindow(entrylib);
 
         if(!SystemTray.isSupported()) {
