@@ -1,5 +1,7 @@
 package com.billyang.entrylib.Database;
 
+import com.billyang.entrylib.Subgroup.Subgroup;
+
 import java.io.File;
 import java.sql.*;
 import java.util.ArrayList;
@@ -52,21 +54,21 @@ public class Database {
     public Statement stmt = null;
 
     /**
-     * 连接群对应的数据库
-     * @param groupId 群号
+     * 连接数据库
+     * @param database 数据库
      * @return 连接情况
      */
-    public boolean connect(long groupId) {
+    public boolean connect(String database) {
         try {
             Class.forName("org.sqlite.JDBC");
-            c = DriverManager.getConnection("jdbc:sqlite:data/EntryLib/databases/" + groupId + ".db");
+            c = DriverManager.getConnection(database);
 
             stmt = c.createStatement();
             if(!exists(stmt, "__MAIN_TABLE")) { //新数据库，创建主表
                 String sql = "CREATE TABLE __MAIN_TABLE " +
-                             "(ID         INT           PRIMARY KEY NOT NULL," +   //编号
-                             " TITLE      nvarchar(100) NOT NULL," +               //词条名
-                             " MATCH_MODE INT           NOT NULL DEFAULT 0)"       //匹配模式
+                        "(ID         INT           PRIMARY KEY NOT NULL," +   //编号
+                        " TITLE      nvarchar(100) NOT NULL," +               //词条名
+                        " MATCH_MODE INT           NOT NULL DEFAULT 0)"       //匹配模式
                         ;
                 stmt.executeUpdate(sql);
             }
@@ -75,6 +77,25 @@ public class Database {
             return false;
         }
         return true;
+    }
+
+    /**
+     * 连接群对应的数据库
+     * @param groupId 群号
+     * @return 连接情况
+     */
+    public boolean connect(long groupId) {
+        return connect("jdbc:sqlite:data/EntryLib/databases/" + groupId + ".db");
+    }
+
+    /**
+     * 连接群分组对应的数据库
+     * @param subgroup 群分组
+     * @return 连接情况
+     * @see Subgroup
+     */
+    public boolean connect(Subgroup subgroup) {
+        return connect("jdbc:sqlite:data/EntryLib/databases/" + subgroup.getName() + ".db");
     }
 
     /**
@@ -168,20 +189,17 @@ public class Database {
     }
 
     /**
-     * 连接群数据库，向词条插入新内容
+     * 向词条插入新内容
+     * 保证已连接数据库
      * 返回错误信息
-     * @param groupId 群号
      * @param title 词条名
      * @param content 新内容
      * @param type 匹配方式
      * @param ErrorInfo 传递错误信息
      * @return 插入状态
      */
-    public boolean insert(long groupId, String title, String content, int type, StringBuilder ErrorInfo) { //
-        if(!connect(groupId)) {
-            ErrorInfo.append("数据库连接失败！");
-            return false;
-        }
+    public boolean insert(String title, String content, int type, StringBuilder ErrorInfo) {
+        if(c == null && stmt == null) return false;
 
         int id = find_id(title);
         if(id == -3)
@@ -201,7 +219,7 @@ public class Database {
 
         try {
             String sql = "INSERT INTO " + table + " (ID,CONTENT)" +
-                         "VALUES (" + tableId + ",'" + content +"');"
+                    "VALUES (" + tableId + ",'" + content +"');"
                     ;
             stmt.executeUpdate(sql);
         } catch( Exception e ) {
@@ -216,18 +234,54 @@ public class Database {
     }
 
     /**
-     * 连接群数据库，删除词条
+     * 连接群数据库，向词条插入新内容
      * 返回错误信息
      * @param groupId 群号
      * @param title 词条名
+     * @param content 新内容
+     * @param type 匹配方式
      * @param ErrorInfo 传递错误信息
-     * @return 删除状态
+     * @return 插入状态
      */
-    public boolean delete(long groupId, String title, StringBuilder ErrorInfo) {
+    public boolean insert(long groupId, String title, String content, int type, StringBuilder ErrorInfo) {
         if(!connect(groupId)) {
             ErrorInfo.append("数据库连接失败！");
             return false;
         }
+
+        return insert(title, content, type, ErrorInfo);
+    }
+
+    /**
+     * 连接群分组数据库，向词条插入新内容
+     * 返回错误信息
+     * @param subgroup 群分组
+     * @param title 词条名
+     * @param content 新内容
+     * @param type 匹配方式
+     * @param ErrorInfo 传递错误信息
+     * @return 插入状态
+     * @see Subgroup
+     */
+    public boolean insert(Subgroup subgroup, String title, String content, int type, StringBuilder ErrorInfo) {
+        if(!connect(subgroup)) {
+            ErrorInfo.append("数据库连接失败！");
+            return false;
+        }
+
+        return insert(title, content, type, ErrorInfo);
+    }
+
+    /**
+     * 删除词条
+     * 保证已连接数据库
+     * 返回错误信息
+     * @param title 词条名
+     * @param ErrorInfo 传递错误信息
+     * @return 删除状态
+     */
+    public boolean delete(String title, StringBuilder ErrorInfo) {
+        if(c == null && stmt == null) return false;
 
         int id = find_id(title);
         if(id == -3) {
@@ -267,19 +321,51 @@ public class Database {
     }
 
     /**
-     * 连接群数据库，查询词条的最新内容
+     * 连接群数据库，删除词条
      * 返回错误信息
      * @param groupId 群号
+     * @param title 词条名
+     * @param ErrorInfo 传递错误信息
+     * @return 删除状态
+     */
+    public boolean delete(long groupId, String title, StringBuilder ErrorInfo) {
+        if(!connect(groupId)) {
+            ErrorInfo.append("数据库连接失败！");
+            return false;
+        }
+
+        return delete(title, ErrorInfo);
+    }
+
+    /**
+     * 连接群分组数据库，删除词条
+     * 返回错误信息
+     * @param subgroup 群分组
+     * @param title 词条名
+     * @param ErrorInfo 传递错误信息
+     * @return 删除状态
+     * @see Subgroup
+     */
+    public boolean delete(Subgroup subgroup, String title, StringBuilder ErrorInfo) {
+        if(!connect(subgroup)) {
+            ErrorInfo.append("数据库连接失败！");
+            return false;
+        }
+
+        return delete(title, ErrorInfo);
+    }
+
+    /**
+     * 查询词条的最新内容
+     * 保证已连接数据库
+     * 返回错误信息
      * @param id 词条id
      * @param random 是否随机版本回复
      * @param ErrorInfo 传递错误信息
      * @return 词条最新内容
      */
-    public String query(long groupId, int id, boolean random, StringBuilder ErrorInfo) {
-        if(!connect(groupId)) {
-            ErrorInfo.append("数据库连接失败！");
-            return null;
-        }
+    public String query(int id, boolean random, StringBuilder ErrorInfo) {
+        if(c == null && stmt == null) return null;
 
         String table = "TABLE_" + id;
         int tableId = max_id(table);
@@ -310,19 +396,53 @@ public class Database {
     }
 
     /**
-     * 连接群数据库，查询词条的历史内容
+     * 连接群数据库，查询词条的最新内容
      * 返回错误信息
      * @param groupId 群号
+     * @param id 词条id
+     * @param random 是否随机版本回复
+     * @param ErrorInfo 传递错误信息
+     * @return 词条最新内容
+     */
+    public String query(long groupId, int id, boolean random, StringBuilder ErrorInfo) {
+        if(!connect(groupId)) {
+            ErrorInfo.append("数据库连接失败！");
+            return null;
+        }
+
+        return query(id, random, ErrorInfo);
+    }
+
+    /**
+     * 连接群分组数据库，查询词条的最新内容
+     * 返回错误信息
+     * @param subgroup 群分组
+     * @param id 词条id
+     * @param random 是否随机版本回复
+     * @param ErrorInfo 传递错误信息
+     * @return 词条最新内容
+     * @see Subgroup
+     */
+    public String query(Subgroup subgroup, int id, boolean random, StringBuilder ErrorInfo) {
+        if(!connect(subgroup)) {
+            ErrorInfo.append("数据库连接失败！");
+            return null;
+        }
+
+        return query(id, random, ErrorInfo);
+    }
+
+    /**
+     * 查询词条的历史内容
+     * 保证已连接数据库
+     * 返回错误信息
      * @param id 词条id
      * @param ErrorInfo 传递错误信息
      * @return 返回一个表，储存所有历史项，每项都是 QueryValue 类型
      * @see QueryValue
      */
-    public List<QueryValue> history(long groupId, int id, StringBuilder ErrorInfo) {
-        if(!connect(groupId)) {
-            ErrorInfo.append("数据库连接失败！");
-            return null;
-        }
+    public List<QueryValue> history(int id, StringBuilder ErrorInfo) {
+        if(c == null && stmt == null) return null;
 
         String table = "TABLE_" + id;
         List<QueryValue> list = new ArrayList<>();
@@ -347,5 +467,42 @@ public class Database {
 
         close();
         return list;
+    }
+
+    /**
+     * 连接群数据库，查询词条的历史内容
+     * 返回错误信息
+     * @param groupId 群号
+     * @param id 词条id
+     * @param ErrorInfo 传递错误信息
+     * @return 返回一个表，储存所有历史项，每项都是 QueryValue 类型
+     * @see QueryValue
+     */
+    public List<QueryValue> history(long groupId, int id, StringBuilder ErrorInfo) {
+        if(!connect(groupId)) {
+            ErrorInfo.append("数据库连接失败！");
+            return null;
+        }
+
+        return history(id, ErrorInfo);
+    }
+
+    /**
+     * 连接群分组数据库，查询词条的历史内容
+     * 返回错误信息
+     * @param subgroup 群分组
+     * @param id 词条id
+     * @param ErrorInfo 传递错误信息
+     * @return 返回一个表，储存所有历史项，每项都是 QueryValue 类型
+     * @see QueryValue
+     * @see Subgroup
+     */
+    public List<QueryValue> history(Subgroup subgroup, int id, StringBuilder ErrorInfo) {
+        if(!connect(subgroup)) {
+            ErrorInfo.append("数据库连接失败！");
+            return null;
+        }
+
+        return history(id, ErrorInfo);
     }
 }

@@ -1,6 +1,7 @@
 package com.billyang.entrylib.Matcher;
 
 import com.billyang.entrylib.Database.Database;
+import com.billyang.entrylib.Subgroup.Subgroup;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -40,19 +41,19 @@ public class MatchLoader {
     }
 
     /**
-     * 连接群数据库，返回根据词条名匹配到的一条信息
+     * 返回根据词条名匹配到的一条信息
+     * 保证数据库已连接
      * 优化方向：可以直接调用 search，但会降低效率
      * 开发常见问题：ResultSet 对象统一，根据数据库查询动态改变
-     * @param groupID 群号
      * @param title 词条名
      * @return 一个 MatchValue 对象
      * @see #search(long, String)
      * @see MatchValue
      */
-    public MatchValue match(long groupID, String title) {
-        db.connect(groupID);
-
+    public MatchValue match(String title) {
         Statement stmt = db.stmt;
+
+        if(stmt == null) return null;
 
         int id = db.find_id(title); //精确匹配
         if(id > 0) {
@@ -112,16 +113,45 @@ public class MatchLoader {
     }
 
     /**
-     * 连接群数据库，返回根据词条名匹配到的所有信息
+     * 连接群数据库，返回根据词条名匹配到的一条信息
      * @param groupID 群号
+     * @param title 词条名
+     * @return 一个 MatchValue 对象
+     * @see #search(long, String)
+     * @see MatchValue
+     */
+    public MatchValue match(long groupID, String title) {
+        db.connect(groupID);
+
+        return match(title);
+    }
+
+    /**
+     * 连接群分组数据库，返回根据词条名匹配到的一条信息
+     * @param subgroup 群分组
+     * @param title 词条名
+     * @return 一个 MatchValue 对象
+     * @see #search(long, String)
+     * @see MatchValue
+     * @see Subgroup
+     */
+    public MatchValue match(Subgroup subgroup, String title) {
+        db.connect(subgroup);
+
+        return match(title);
+    }
+
+    /**
+     * 返回根据词条名匹配到的所有信息
+     * 保证数据库已连接
      * @param keyword 词条名
      * @return 一个 MatchValue 列表
      * @see MatchValue
      */
-    public List<MatchValue> search(long groupID, String keyword) {
-        db.connect(groupID);
-
+    public List<MatchValue> search(String keyword) {
         Statement stmt = db.stmt;
+
+        if(stmt == null) return null;
 
         List<MatchValue> list = new ArrayList<>();
 
@@ -177,15 +207,42 @@ public class MatchLoader {
     }
 
     /**
-     * 连接群数据库，返回所有词条信息
+     * 连接群数据库，返回根据词条名匹配到的所有信息
      * @param groupID 群号
+     * @param keyword 词条名
      * @return 一个 MatchValue 列表
      * @see MatchValue
      */
-    public List<MatchValue> all(long groupID) {
+    public List<MatchValue> search(long groupID, String keyword) {
         db.connect(groupID);
 
+        return search(keyword);
+    }
+
+    /**
+     * 连接群分组数据库，返回根据词条名匹配到的所有信息
+     * @param subgroup 群分组
+     * @param keyword 词条名
+     * @return 一个 MatchValue 列表
+     * @see MatchValue
+     * @see Subgroup
+     */
+    public List<MatchValue> search(Subgroup subgroup, String keyword) {
+        db.connect(subgroup);
+
+        return search(keyword);
+    }
+
+    /**
+     * 返回所有词条信息
+     * 保证数据库已连接
+     * @return 一个 MatchValue 列表
+     * @see MatchValue
+     */
+    public List<MatchValue> all() {
         Statement stmt = db.stmt;
+
+        if(stmt == null) return null;
 
         List<MatchValue> list = new ArrayList<>();
 
@@ -207,6 +264,31 @@ public class MatchLoader {
 
         db.close();
         return list;
+    }
+
+    /**
+     * 连接群数据库，返回所有词条信息
+     * @param groupID 群号
+     * @return 一个 MatchValue 列表
+     * @see MatchValue
+     */
+    public List<MatchValue> all(long groupID) {
+        db.connect(groupID);
+
+        return all();
+    }
+
+    /**
+     * 连接群分组数据库，返回所有词条信息
+     * @param subgroup 群分组
+     * @return 一个 MatchValue 列表
+     * @see MatchValue
+     * @see Subgroup
+     */
+    public List<MatchValue> all(Subgroup subgroup) {
+        db.connect(subgroup);
+
+        return all();
     }
 
     /**

@@ -8,6 +8,8 @@ import com.billyang.entrylib.Matcher.MatchLoader;
 import com.billyang.entrylib.Matcher.MatchValue;
 import com.billyang.entrylib.Matcher.RegularReplace;
 import com.billyang.entrylib.MediaCoder.ImageProcessor;
+import com.billyang.entrylib.Subgroup.Subgroup;
+import com.billyang.entrylib.Subgroup.SubgroupLoader;
 import com.billyang.entrylib.ui.Tray;
 import com.billyang.entrylib.EntryPackage.PackageLoader;
 import net.mamoe.mirai.console.plugin.jvm.JavaPlugin;
@@ -43,6 +45,7 @@ public final class EntryLib extends JavaPlugin {
     ImageProcessor ip = new ImageProcessor();
     public PackageLoader pl = new PackageLoader();
     Tray tray = new Tray();
+    SubgroupLoader sgl = new SubgroupLoader();
 
     /**
      * sendGroupMessage 方法向群发送一条消息
@@ -87,7 +90,11 @@ public final class EntryLib extends JavaPlugin {
         }
 
         StringBuilder ErrorInfo = new StringBuilder();
-        boolean status = db.insert(g.getGroup().getId(), title, content, type, ErrorInfo); //向数据库插入
+        boolean status;
+
+        Subgroup subgroup = sgl.get(g.getGroup().getId());
+        if(subgroup == null) status = db.insert(g.getGroup().getId(), title, content, type, ErrorInfo); //向数据库插入
+        else status = db.insert(subgroup, title, content, type, ErrorInfo);
 
         if(status) sendGroupMessage(g,"learn", "done", title);
         else {
@@ -120,7 +127,12 @@ public final class EntryLib extends JavaPlugin {
             return;
         }
 
-        MatchValue mv = ml.match(g.getGroup().getId(), title);
+        MatchValue mv;
+
+        Subgroup subgroup = sgl.get(g.getGroup().getId());
+        if(subgroup == null) mv = ml.match(g.getGroup().getId(), title);
+        else mv = ml.match(subgroup, title);
+
         int id = mv.getId(); //获取匹配到的词条id
         int type = mv.getType(); //获取匹配到的匹配方式
 
@@ -128,7 +140,10 @@ public final class EntryLib extends JavaPlugin {
             if(!cancelError) sendGroupMessage(g,"view", "exist", title);
         } else {
             StringBuilder ErrorInfo = new StringBuilder(); //错误信息
-            String content = db.query(g.getGroup().getId(), id, uio.getRandomReply(), ErrorInfo);
+            String content;
+
+            if(subgroup == null) content = db.query(g.getGroup().getId(), id, uio.getRandomReply(), ErrorInfo);
+            else content = db.query(subgroup, id, uio.getRandomReply(), ErrorInfo);
 
             if(content == null) {
                 if(!cancelError) {
@@ -176,7 +191,12 @@ public final class EntryLib extends JavaPlugin {
             return;
         }
 
-        MatchValue mv = ml.match(g.getGroup().getId(), title);
+        MatchValue mv;
+
+        Subgroup subgroup = sgl.get(g.getGroup().getId());
+        if(subgroup == null) mv = ml.match(g.getGroup().getId(), title);
+        else mv = ml.match(subgroup, title);
+
         int id = mv.getId(); //获取匹配到的词条id
         int type = mv.getType(); //获取匹配到的匹配方式
 
@@ -184,7 +204,10 @@ public final class EntryLib extends JavaPlugin {
             sendGroupMessage(g,"history", "exist", title);
         } else {
             StringBuilder ErrorInfo = new StringBuilder(); //错误信息
-            List<QueryValue> contentList = db.history(g.getGroup().getId(), id, ErrorInfo); //获取列表
+            List<QueryValue> contentList;
+
+            if(subgroup == null) contentList = db.history(g.getGroup().getId(), id, ErrorInfo); //获取列表
+            else contentList = db.history(subgroup, id, ErrorInfo);
 
             if(contentList == null) {
                 sendGroupMessage(g,"history", "error", title);
@@ -261,7 +284,12 @@ public final class EntryLib extends JavaPlugin {
             return;
         }
 
-        List<MatchValue> list = ml.search(g.getGroup().getId(), keyword);
+        List<MatchValue> list;
+
+        Subgroup subgroup = sgl.get(g.getGroup().getId());
+        if(subgroup == null) list = ml.search(g.getGroup().getId(), keyword);
+        else list = ml.search(subgroup, keyword);
+
         StringBuilder reply = new StringBuilder();
 
         if(list.isEmpty()) { //未找到结果
@@ -323,7 +351,12 @@ public final class EntryLib extends JavaPlugin {
             return;
         }
 
-        List<MatchValue> list = ml.all(g.getGroup().getId());
+        List<MatchValue> list;
+
+        Subgroup subgroup = sgl.get(g.getGroup().getId());
+        if(subgroup == null) list = ml.all(g.getGroup().getId());
+        else list = ml.all(subgroup);
+
         StringBuilder reply = new StringBuilder();
 
         if(list.isEmpty()) { //未找到结果
@@ -390,7 +423,11 @@ public final class EntryLib extends JavaPlugin {
         }
 
         StringBuilder ErrorInfo = new StringBuilder(); //错误信息
-        boolean status = db.delete(g.getGroup().getId(), title, ErrorInfo);
+        boolean status;
+
+        Subgroup subgroup = sgl.get(g.getGroup().getId());
+        if(subgroup == null) status = db.delete(g.getGroup().getId(), title, ErrorInfo);
+        else status = db.delete(subgroup, title, ErrorInfo);
 
         if(!status) {
             if(ErrorInfo.toString().contains("词条不存在")) sendGroupMessage(g,"delete", "exist", title); //未找到
@@ -416,6 +453,8 @@ public final class EntryLib extends JavaPlugin {
         String DataFolderPath = getDataFolder().getAbsolutePath();
         getLogger().info("配置文件目录：" + DataFolderPath);
 
+        StringBuilder ErrorInfo = new StringBuilder();
+
         if(!db.init(DataFolderPath)) { //初始化数据库
             getLogger().error("无法加载数据库，请检查数据库是否损坏？");
             getLogger().error("插件无法正常运行，将停止加载。");
@@ -423,10 +462,13 @@ public final class EntryLib extends JavaPlugin {
         }
         ml.init(db); //初始化匹配器
         uio.init(this, DataFolderPath); //初始化用户交互
-        eg.init(DataFolderPath,uio); //初始化群开关
+        eg.init(DataFolderPath, uio); //初始化群开关
         ip.init(DataFolderPath); //初始化图片处理器
-        pl.init(db);
+        pl.init(db); //加载词条导入导出工具
         tray.create(this); //创建托盘
+        if(!sgl.load(DataFolderPath, ErrorInfo)) { //加载群分组
+            getLogger().error(ErrorInfo.toString());
+        }
 
         getLogger().info("词条插件已加载完成！");
 
