@@ -2,6 +2,7 @@ package com.billyang.entrylib.ui;
 
 import com.billyang.entrylib.Config.UserIO;
 import com.billyang.entrylib.EntryLib;
+import com.billyang.entrylib.Matcher.MatchLoader;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -340,7 +341,7 @@ public class FloatingWindow extends JFrame {
                 );
             } else {
                 StringBuilder ErrorInfo = new StringBuilder();
-                if(entrylib.pl.leadOut(entrylib.ml, groupId, file, ErrorInfo)) {
+                if(entrylib.pl.leadOut(new MatchLoader(), groupId, file, ErrorInfo)) {
                     JOptionPane.showMessageDialog(
                             panel, "导出完成，已导出到 " + file.getAbsolutePath(), "成功", JOptionPane.INFORMATION_MESSAGE
                     );

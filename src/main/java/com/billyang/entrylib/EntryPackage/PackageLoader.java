@@ -21,10 +21,17 @@ public class PackageLoader {
 
     /**
      * 初始化
-     * @param db 提供数据库
      */
-    public void init(Database db) {
-        this.db = db;
+    public void init() {
+        db = new Database();
+    }
+
+    /**
+     * 构造函数
+     * 自动初始化
+     */
+    public PackageLoader() {
+        init();
     }
 
     /**

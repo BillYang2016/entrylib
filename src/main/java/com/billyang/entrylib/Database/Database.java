@@ -7,6 +7,7 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.TimerTask;
 
 /**
  * Database 类
@@ -17,21 +18,25 @@ import java.util.Random;
  */
 public class Database {
 
-    String RootPath;
-
     /**
      * 初始化
-     * @param path 提供数据路径
      * @return 成功状态
      */
-    public boolean init(String path) {
-        RootPath = path;
+    public boolean init() {
         File file = new File("data/EntryLib/databases/");
         if(!file.exists()) {
             file.mkdirs();
         }
 
         return true;
+    }
+
+    /**
+     * 构造函数
+     * 自动初始化
+     */
+    public Database() {
+        init();
     }
 
     /**

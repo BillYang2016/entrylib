@@ -34,10 +34,18 @@ public class MatchLoader {
 
     /**
      * 初始化
-     * @param db 指定数据库
+     * 创建新数据库对象
      */
-    public void init(Database db) {
-        this.db=db;
+    public void init() {
+        db = new Database();
+    }
+
+    /**
+     * 构造函数
+     * 自动初始化
+     */
+    public MatchLoader() {
+        init();
     }
 
     /**
