@@ -45,7 +45,7 @@ public final class EntryLib extends JavaPlugin {
     ImageProcessor ip = new ImageProcessor();
     public PackageLoader pl = new PackageLoader();
     Tray tray = new Tray();
-    SubgroupLoader sgl = new SubgroupLoader();
+    public SubgroupLoader sgl = new SubgroupLoader();
 
     /**
      * sendGroupMessage 方法向群发送一条消息

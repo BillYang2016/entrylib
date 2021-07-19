@@ -116,6 +116,7 @@ public class FloatingWindow extends JFrame {
 
         addGlobalConfigPage();
         addPackageLeadingPage();
+        addUpdateSubgroupPage();
 
         tabbedPane.setSelectedIndex(0);
         tabbedPane.addChangeListener(new ChangeListener() {
@@ -441,5 +442,27 @@ public class FloatingWindow extends JFrame {
                 e.printStackTrace();
             }
         }
+    }
+
+    void addUpdateSubgroupPage() {
+        JPanel panel = new JPanel();
+
+        panel.setLayout(null);
+
+        JButton button = new JButton("更新分组配置");
+        button.addActionListener(e -> {
+            StringBuilder ErrorInfo = new StringBuilder();
+            if(!entrylib.sgl.load(entrylib.getDataFolder().getAbsolutePath(), ErrorInfo))JOptionPane.showMessageDialog(this, ErrorInfo.toString(),"更新失败", JOptionPane.ERROR_MESSAGE);
+            else JOptionPane.showMessageDialog(this,"更新完成！", "更新成功", JOptionPane.INFORMATION_MESSAGE);
+        });
+
+        int height = getPageHeight(3), width = getPageWidth(3);
+        int borderHeight = (height - 10) / 3, contentHeight = borderHeight - 2;
+        int borderWidth = (width - 20) / 3, contentWidth = borderWidth - 2;
+
+        button.setBounds(contentWidth, contentHeight, contentWidth, contentHeight);
+        panel.add(button);
+
+        tabbedPane.addTab("分组更新", panel);
     }
 }

@@ -110,7 +110,7 @@ EntryLib 是一个基于 [Mirai-Console](https://github.com/mamoe/mirai-console)
 这个文件的格式样例可以参考[这里](https://github.com/BillYang2016/entrylib/blob/main/src/main/resources/subgroup-template.json)  
 群分组配置文件由键值对构成，键为分组名，值为群组列表（群号字符串列表）  
 ## 注意事项
-1. 群分组配置**不支持热加载**，仅在插件启动时从硬盘读取配置。这样设计是为了提高效率，可能会在未来进行优化
+1. 群分组配置现已**支持热加载**，插件启动时从硬盘读取配置，也可以修改文件后从[控制台](#控制台)更新加载
 2. 分组名不允许全为数字，原因请见[数据库结构](#数据库结构)
 3. 不允许同一个群同时存在于多个分组中
 4. 若群分组加载错误或失败，将在控制台发送错误信息，此时的群分组状态为空
@@ -165,6 +165,7 @@ EntryLib 是一个基于 [Mirai-Console](https://github.com/mamoe/mirai-console)
 在控制台中可以方便地进行如下操作：
 - 编辑全局配置
 - 词条库导入导出
+- 分组配置更新
 
 ## 词条库导入导出
 导入导出会根据一个 json 文件进行，这个文件的格式样例可以参考[这里](https://github.com/BillYang2016/entrylib/blob/main/src/main/resources/datapackage-template.json)  
