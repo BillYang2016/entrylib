@@ -591,7 +591,7 @@ public final class EntryLib extends JavaPlugin {
                     }
                 }
 
-                processSearch(g, splitedMsg[1],page);
+                processSearch(g, splitedMsg[1], page);
 
             } else if(command.equals("all")) { //搜索全部类命令
 
