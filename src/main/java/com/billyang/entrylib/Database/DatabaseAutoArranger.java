@@ -76,6 +76,9 @@ public class DatabaseAutoArranger extends TimerTask {
 
     /**
      * 整理数据库
+     * 共两项工作：
+     * - 删除游离表（即主表不存在记录但存在于数据库中的词条表）
+     * - 将词条 id 整理成连续正整数
      * @param fileName 数据库名
      * @return 整理状态
      */
