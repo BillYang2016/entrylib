@@ -1,11 +1,74 @@
 package com.billyang.entrylib.Database;
 
 import com.billyang.entrylib.EntryLib;
+import com.billyang.entrylib.MediaCoder.ImageProcessor;
 
 import java.io.File;
 import java.sql.*;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+/**
+ * ImageCleaner 类
+ * 多线程，继承自 Runnable 接口
+ * 清理没有用过的图片
+ */
+class ImageCleaner implements Runnable {
+    private Thread t;
+
+    EntryLib entrylib;
+    private List<File> fileList;
+
+    /**
+     * 构造函数
+     * @param entrylib 传递主类
+     * @param fileList 提供已存在列表
+     */
+    ImageCleaner(EntryLib entrylib, List<File> fileList) {
+        this.entrylib = entrylib;
+        this.fileList = fileList;
+    }
+
+    /**
+     * 线程运行方法
+     */
+    public void run() {
+        File imageFolder = new File("data/EntryLib/images/");
+        if(imageFolder.exists()) {
+            List<File> tempList = Arrays.asList(imageFolder.listFiles());
+            List<File> imageFiles = new ArrayList(tempList);
+            HashSet<File> hs1 = new HashSet(fileList), hs2 = new HashSet(imageFiles);
+
+            hs2.removeAll(hs1);
+            imageFiles.clear();
+            imageFiles.addAll(hs2); //得到需要删除的图片文件
+
+            for(File file: imageFiles) {
+                System.gc(); //需要先垃圾回收才能删除
+                file.getAbsoluteFile().delete(); //删除图片
+                try {
+                    Thread.sleep(50);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            entrylib.getLogger().info("数据库整理器已清理未使用的图片缓存：总计" + imageFiles.size() + "个图片");
+        }
+    }
+
+    /**
+     * 线程开始方法
+     */
+    public void start() {
+        if(t == null) {
+            t = new Thread(this);
+            t.start();
+        }
+    }
+}
 
 /**
  * DatabaseAutoArranger 类
@@ -235,6 +298,68 @@ public class DatabaseAutoArranger extends TimerTask {
     }
 
     /**
+     * 将字符串中的图片 Mirai 码提取出来
+     * @param text 字符串
+     * @return 图片文件列表
+     */
+    public List<File> Text2ImageFile(String text) {
+        List<File> list = new ArrayList<>();
+
+        Pattern pt = Pattern.compile(ImageProcessor.regex);
+        Matcher mt = pt.matcher(text);
+
+        int start, end = 0;
+
+        while(mt.find()) {
+            start = mt.start();
+            end = mt.end();
+
+            String imageId = ImageProcessor.MiraiCode2Id(text.substring(start, end));
+            File file = new File("data/EntryLib/images/", imageId);
+
+            if(file.exists())list.add(file);
+        }
+
+        return list;
+    }
+
+    List<File> fileList;
+
+    void listImage(String fileName) {
+        List<Integer> idList = new ArrayList<>(); //词条表编号列表
+
+        try {
+            String sql = "SELECT * FROM __MAIN_TABLE;";
+            ResultSet rs = stmt.executeQuery(sql);
+            while(rs.next()) {
+                int id = rs.getInt("ID");
+                String title = rs.getString("TITLE");
+
+                idList.add(id);
+                fileList.addAll(Text2ImageFile(title)); //添加标题
+            }
+            rs.close();
+        } catch( Exception e ) {
+            e.printStackTrace();
+        }
+
+        for(int id: idList) {
+            try {
+                String sql = "SELECT * FROM TABLE_" + id + ";";
+                ResultSet rs = stmt.executeQuery(sql);
+                while(rs.next()) {
+                    String content = rs.getString("CONTENT");
+
+                    fileList.addAll(Text2ImageFile(content)); //添加标题
+                }
+                rs.close();
+            } catch( Exception e ) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    /**
      * 定时任务
      * 整理词条库包含的所有数据库
      */
@@ -248,6 +373,8 @@ public class DatabaseAutoArranger extends TimerTask {
         if(files == null) return;
 
         entrylib.getLogger().info("数据库整理器开始执行整理任务");
+
+        fileList = new ArrayList<>();
 
         for(File dbFile: files) {
             if(dbFile.isDirectory()) continue;
@@ -264,8 +391,13 @@ public class DatabaseAutoArranger extends TimerTask {
 
             if(rearrange(fileName))entrylib.getLogger().info("数据库" + fileName + "整理完成");
 
+            listImage(fileName);
+
             close();
         }
+
+        ImageCleaner imageCleaner = new ImageCleaner(entrylib, fileList);
+        imageCleaner.start();
 
         entrylib.getLogger().info("数据库整理器已完成所有整理任务");
     }

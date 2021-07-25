@@ -463,6 +463,19 @@ public class FloatingWindow extends JFrame {
         button.setBounds(contentWidth, contentHeight, contentWidth, contentHeight);
         panel.add(button);
 
-        tabbedPane.addTab("分组更新", panel);
+        InputStream is = entrylib.getResourceAsStream("group.jpg"); //添加图标
+        if(is == null) {
+            entrylib.getLogger().warning("未找到资源文件group.jpg");
+
+            tabbedPane.addTab("分组更新", panel);
+        } else {
+            try {
+                ImageIcon icon = new ImageIcon(ImageIO.read(is));
+
+                tabbedPane.addTab("分组更新", icon, panel);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 }

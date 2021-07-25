@@ -71,14 +71,14 @@ public class ImageProcessor {
      * @param Id 图片 ID
      * @return Mirai 码
      */
-    String Id2MiraiCode(String Id) {return "[mirai:image:" + Id + "]";}
+    public static String Id2MiraiCode(String Id) {return "[mirai:image:" + Id + "]";}
 
     /**
      * 将图片 Mirai 码转化为 图片 ID
      * @param code Mirai 码
      * @return 图片 ID
      */
-    String MiraiCode2Id(String code) {return code.replace("[mirai:image:", "").replace("]","");}
+    public static String MiraiCode2Id(String code) {return code.replace("[mirai:image:", "").replace("]","");}
 
     /**
      * 将消息队列中的图片转义为作为 Mirai 码的字符串
@@ -111,7 +111,7 @@ public class ImageProcessor {
      * 图片 Mirai 码的正则匹配式
      * @see Image
      */
-    String regex = "\\[mirai:image:\\{[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}\\}\\..{3,5}]";
+    public static String regex = "\\[mirai:image:\\{[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}\\}\\..{3,5}]";
 
     /**
      * 将消息队列中的图片 Mirai 码反转义为图片
