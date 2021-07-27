@@ -1,7 +1,7 @@
 package com.billyang.entrylib.Database;
 
 import com.billyang.entrylib.EntryLib;
-import com.billyang.entrylib.MediaCoder.ImageProcessor;
+import com.billyang.entrylib.MiraiCodeParser.ImageParser;
 
 import java.io.File;
 import java.sql.*;
@@ -305,7 +305,7 @@ public class DatabaseAutoArranger extends TimerTask {
     public List<File> Text2ImageFile(String text) {
         List<File> list = new ArrayList<>();
 
-        Pattern pt = Pattern.compile(ImageProcessor.regex);
+        Pattern pt = Pattern.compile(ImageParser.regex);
         Matcher mt = pt.matcher(text);
 
         int start, end = 0;
@@ -314,7 +314,7 @@ public class DatabaseAutoArranger extends TimerTask {
             start = mt.start();
             end = mt.end();
 
-            String imageId = ImageProcessor.MiraiCode2Id(text.substring(start, end));
+            String imageId = ImageParser.MiraiCode2Id(text.substring(start, end));
             File file = new File("data/EntryLib/images/", imageId);
 
             if(file.exists())list.add(file);

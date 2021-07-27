@@ -186,7 +186,7 @@ EntryLib 是一个基于 [Mirai-Console](https://github.com/mamoe/mirai-console)
 - [x] 图片
 - [ ] At
 - [ ] AtAll
-- [ ] Face
+- [x] Face
 - [ ] 闪图（很可能不会适配）
 - [ ] 戳一戳（很可能不会适配）
 - [ ] Vip表情（Mirai 不支持发送，发送时会变成纯文本，因此不会适配）

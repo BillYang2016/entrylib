@@ -16,7 +16,7 @@ import java.util.regex.Pattern;
  * 实现对图片进行转义与反转义
  * @author Bill Yang
  */
-public class ImageProcessor {
+public class ImageParser {
 
     String path;
 
@@ -37,7 +37,7 @@ public class ImageProcessor {
      * 构造函数
      * 自动初始化
      */
-    public ImageProcessor() {
+    public ImageParser() {
         init("data/EntryLib");
     }
 

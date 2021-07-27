@@ -8,7 +8,8 @@ import com.billyang.entrylib.Database.QueryValue;
 import com.billyang.entrylib.Matcher.MatchLoader;
 import com.billyang.entrylib.Matcher.MatchValue;
 import com.billyang.entrylib.Matcher.RegularReplace;
-import com.billyang.entrylib.MediaCoder.ImageProcessor;
+import com.billyang.entrylib.MiraiCodeParser.CodeParser;
+import com.billyang.entrylib.MiraiCodeParser.ImageParser;
 import com.billyang.entrylib.Subgroup.Subgroup;
 import com.billyang.entrylib.Subgroup.SubgroupLoader;
 import com.billyang.entrylib.ui.Tray;
@@ -33,7 +34,7 @@ import java.util.Timer;
 public final class EntryLib extends JavaPlugin {
     public static final EntryLib INSTANCE = new EntryLib();
     private EntryLib() {
-        super(new JvmPluginDescriptionBuilder("EntryLib", "1.0.5")
+        super(new JvmPluginDescriptionBuilder("EntryLib", "1.0.6")
                 .id("com.billyang.entrylib")
                 .info("Ask and replay plugin for Mirai-Console")
                 .author("Bill Yang")
@@ -42,7 +43,7 @@ public final class EntryLib extends JavaPlugin {
 
     public UserIO uio = new UserIO();
     public EnableGroups eg = new EnableGroups();
-    ImageProcessor ip = new ImageProcessor();
+    CodeParser cp;
     public PackageLoader pl = new PackageLoader();
     Tray tray = new Tray();
     public SubgroupLoader sgl = new SubgroupLoader();
@@ -60,7 +61,7 @@ public final class EntryLib extends JavaPlugin {
     void sendGroupMessage(GroupMessageEvent g, String fType, String sType, String... args) {
         String reply = uio.formatString(fType, sType, args);
         if(reply != null && !reply.isEmpty()) {
-            MessageChain msgChain = ip.PlainText2Image(g, reply); //图片反转义
+            MessageChain msgChain = cp.Decode(g, reply); //图片反转义
             Message msg = uio.format(g, msgChain);
             g.getGroup().sendMessage(msg);
         } else if(reply != null)getLogger().warning("尝试发送空字段，已阻止！");
@@ -471,7 +472,7 @@ public final class EntryLib extends JavaPlugin {
 
         uio.init(this, DataFolderPath); //初始化用户交互
         eg.init(DataFolderPath, uio); //初始化群开关
-        ip.init(DataFolderPath); //初始化图片处理器
+        cp = new CodeParser(uio); //初始化转义器
         tray.create(this); //创建托盘
         if(!sgl.load(DataFolderPath, ErrorInfo)) { //加载群分组
             getLogger().error(ErrorInfo.toString());
@@ -515,7 +516,7 @@ public final class EntryLib extends JavaPlugin {
                 return;
             }
 
-            msgChain = ip.Image2PlainText(uio, msgChain); //将图片转义
+            msgChain = cp.Encode(msgChain); //将消息转义
 
             String msg = msgChain.contentToString();
 
