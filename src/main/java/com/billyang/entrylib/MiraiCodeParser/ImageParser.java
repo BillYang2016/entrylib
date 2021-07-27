@@ -1,4 +1,4 @@
-package com.billyang.entrylib.MediaCoder;
+package com.billyang.entrylib.MiraiCodeParser;
 
 import com.billyang.entrylib.Config.UserIO;
 import net.mamoe.mirai.contact.Contact;
@@ -31,6 +31,14 @@ public class ImageProcessor {
         if(!file.exists()) {
             file.mkdirs();
         }
+    }
+
+    /**
+     * 构造函数
+     * 自动初始化
+     */
+    public ImageProcessor() {
+        init("data/EntryLib");
     }
 
     /**
@@ -88,7 +96,7 @@ public class ImageProcessor {
      * @return 转义后的消息队列
      * @see UserIO#getImageDownloadMode()
      */
-    public MessageChain Image2PlainText(UserIO uio, MessageChain msgChain) { //图片转义
+    public MessageChain Image2PlainText(UserIO uio, MessageChain msgChain) {
         MessageChainBuilder builder = new MessageChainBuilder();
 
         boolean download = uio.getImageDownloadMode(); //查询下载选项
@@ -114,11 +122,10 @@ public class ImageProcessor {
     public static String regex = "\\[mirai:image:\\{[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}\\}\\..{3,5}]";
 
     /**
-     * 将消息队列中的图片 Mirai 码反转义为图片
+     * 将纯文本中的图片 Mirai 码反转义为图片
      * 根据情况上传图片或请求服务器
-     * 待优化（String 替换为 MessageChain）
      * @param g 原消息事件
-     * @param msg 消息队列
+     * @param msg 纯文本
      * @return 反转义后的消息队列
      */
     public MessageChain PlainText2Image(GroupMessageEvent g, String msg) {
@@ -158,6 +165,24 @@ public class ImageProcessor {
         }
 
         builder.append(new PlainText(msg.substring(end)));
+
+        return builder.build();
+    }
+
+    /**
+     * 将消息队列中的图片 Mirai 码反转义为图片
+     * 根据情况上传图片或请求服务器
+     * @param g 原消息事件
+     * @param msgChain 消息队列
+     * @return 反转义后的消息队列
+     */
+    public MessageChain PlainText2Image(GroupMessageEvent g, MessageChain msgChain) {
+        MessageChainBuilder builder = new MessageChainBuilder();
+
+        for(SingleMessage message: msgChain) {
+            if(message instanceof PlainText) builder.append(PlainText2Image(g, message.contentToString()));
+            else builder.append(message);
+        }
 
         return builder.build();
     }

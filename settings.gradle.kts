@@ -7,5 +7,5 @@ pluginManagement {
         maven("https://dl.bintray.com/kotlin/kotlin-eap")
     }
 }
-//这里是插件名
+//杩欓噷鏄彃浠跺悕
 rootProject.name = "mirai-entrylib"
