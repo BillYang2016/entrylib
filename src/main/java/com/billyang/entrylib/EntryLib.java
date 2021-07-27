@@ -60,7 +60,7 @@ public final class EntryLib extends JavaPlugin {
     void sendGroupMessage(GroupMessageEvent g, String fType, String sType, String... args) {
         String reply = uio.formatString(fType, sType, args);
         if(reply != null && !reply.isEmpty()) {
-            MessageChain msgChain = cp.Decode(g, reply); //图片反转义
+            MessageChain msgChain = cp.Decode(g, reply); //Mirai Code 解码
             Message msg = uio.format(g, msgChain);
             g.getGroup().sendMessage(msg);
         } else if(reply != null)getLogger().warning("尝试发送空字段，已阻止！");
