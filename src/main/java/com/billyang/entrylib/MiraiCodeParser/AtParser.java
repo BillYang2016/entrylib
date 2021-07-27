@@ -7,41 +7,41 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * FaceProcessor 类
- * 表情处理器
- * 实现对表情进行转义与反转义
+ * AtParser 类
+ * At 处理器
+ * 实现对 At 进行转义与反转义
  * @author Bill Yang
  */
-public class FaceParser {
+public class AtParser {
 
     /**
-     * 将表情 ID 转化为 Mirai 码
+     * 将 At target 转化为 Mirai 码
      * @deprecated 已有可靠官方接口，弃用本方法
-     * @param Id 表情 ID
+     * @param target At target
      * @return Mirai 码
      */
-    public static String Id2MiraiCode(int Id) {return "[mirai:face:" + Id + "]";}
+    public static String Id2MiraiCode(long target) {return "[mirai:at:" + target + "]";}
 
     /**
-     * 将表情 Mirai 码转化为 表情 ID
+     * 将表情 Mirai 码转化为 At target
      * @param code Mirai 码
-     * @return 表情 ID
+     * @return At target
      */
-    public static int MiraiCode2Id(String code) {return Integer.parseInt(code.replace("[mirai:face:", "").replace("]",""));}
+    public static long MiraiCode2Id(String code) {return Long.parseLong(code.replace("[mirai:at:", "").replace("]",""));}
 
     /**
-     * 将消息队列中的表情转义为作为 Mirai 码的字符串
+     * 将消息队列中的 At 转义为作为 Mirai 码的字符串
      * @param msgChain 消息队列
      * @return 转义后的消息队列
      */
-    public MessageChain Face2PlainText(MessageChain msgChain) {
+    public MessageChain At2PlainText(MessageChain msgChain) {
         MessageChainBuilder builder = new MessageChainBuilder();
 
         for(SingleMessage msg : msgChain) {
-            if(msg instanceof Face) {
-                Face face = (Face) msg;
+            if(msg instanceof At) {
+                At at = (At) msg;
 
-                msg = new PlainText(face.serializeToMiraiCode());
+                msg = new PlainText(at.serializeToMiraiCode());
             }
             builder.append(msg);
         }
@@ -50,18 +50,18 @@ public class FaceParser {
     }
 
     /**
-     * 表情 Mirai 码的正则匹配式
-     * @see Face
+     * At Mirai 码的正则匹配式
+     * @see At
      */
-    public static String regex = "\\[mirai:face:[0-9]*]";
+    public static String regex = "\\[mirai:at:[0-9]*]";
 
     /**
-     * 将纯文本中的表情 Mirai 码反转义为表情
+     * 将纯文本中的 At Mirai 码反转义为 At
      * @param g 原消息事件
      * @param msg 纯文本
      * @return 反转义后的消息队列
      */
-    public MessageChain PlainText2Face(GroupMessageEvent g, String msg) {
+    public MessageChain PlainText2At(GroupMessageEvent g, String msg) {
         MessageChainBuilder builder = new MessageChainBuilder();
 
         Pattern pt = Pattern.compile(regex);
@@ -75,10 +75,10 @@ public class FaceParser {
 
             if(start >= 1) builder.append(new PlainText(msg.substring(lastEnd, start)));
 
-            int faceId = MiraiCode2Id(msg.substring(start, end));
+            long target = MiraiCode2Id(msg.substring(start, end));
 
-            Face face = new Face(faceId);
-            builder.append(face);
+            At at = new At(target);
+            builder.append(at);
 
             lastEnd = end;
         }
@@ -89,16 +89,16 @@ public class FaceParser {
     }
 
     /**
-     * 将消息队列中的表情 Mirai 码反转义为表情
+     * 将消息队列中的 At Mirai 码反转义为 At
      * @param g 原消息事件
      * @param msgChain 消息队列
      * @return 反转义后的消息队列
      */
-    public MessageChain PlainText2Face(GroupMessageEvent g, MessageChain msgChain) {
+    public MessageChain PlainText2At(GroupMessageEvent g, MessageChain msgChain) {
         MessageChainBuilder builder = new MessageChainBuilder();
 
         for(SingleMessage message: msgChain) {
-            if(message instanceof PlainText) builder.append(PlainText2Face(g, message.contentToString()));
+            if(message instanceof PlainText) builder.append(PlainText2At(g, message.contentToString()));
             else builder.append(message);
         }
 

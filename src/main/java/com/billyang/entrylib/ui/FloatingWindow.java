@@ -141,7 +141,7 @@ public class FloatingWindow extends JFrame {
 
         panel.setLayout(null);
         int height = getPageHeight(1), width = getPageWidth(1);
-        int borderHeight = (height - 10) / 14, contentHeight = borderHeight - 2;
+        int borderHeight = (height - 10) / 15, contentHeight = borderHeight - 2;
 
         JCheckBox checkbox1 = new JCheckBox("查看模式", uio.getViewMode());
         checkbox1.setToolTipText("选中时，将\"view-mode\"修改为1，表示可以直接输入词条名来查看词条内容。反之，表示需要输入查看指令才可查看词条内容。");
@@ -213,6 +213,13 @@ public class FloatingWindow extends JFrame {
             uio.modifyGlobalConfig("delete-permission", checkbox.isSelected() ? 1 : 0);
         });
 
+        JCheckBox checkbox12 = new JCheckBox("AtAll 解码权限", uio.getAtAllPermission());
+        checkbox12.setToolTipText("选中时，将\"at-all-permission\"修改为1，表示允许机器人发送@全体成员。反之，@全体成员将作为 Mirai 码发送。");
+        checkbox12.addChangeListener(e -> {
+            JCheckBox checkbox = (JCheckBox) e.getSource();
+            uio.modifyGlobalConfig("at-all-permission", checkbox.isSelected() ? 1 : 0);
+        });
+
         JCheckBox checkbox10 = new JCheckBox("缓存图片", uio.getImageDownloadMode());
         checkbox10.setToolTipText("选中时，将\"download-image\"修改为1，表示缓存接收到的图片。反之，表示不缓存。");
         checkbox10.addChangeListener(e -> {
@@ -230,7 +237,8 @@ public class FloatingWindow extends JFrame {
         checkbox7.setBounds(10, 5 + borderHeight * 7, 110, contentHeight);
         checkbox8.setBounds(10, 5 + borderHeight * 8, 130, contentHeight);
         checkbox9.setBounds(10, 5 + borderHeight * 9, 110, contentHeight);
-        checkbox10.setBounds(10, 5 + borderHeight * 10, 80, contentHeight);
+        checkbox12.setBounds(10, 5 + borderHeight * 10, 130, contentHeight);
+        checkbox10.setBounds(10, 5 + borderHeight * 11, 80, contentHeight);
         panel.add(checkbox1);
         panel.add(checkbox11);
         panel.add(checkbox2);
@@ -241,6 +249,7 @@ public class FloatingWindow extends JFrame {
         panel.add(checkbox7);
         panel.add(checkbox8);
         panel.add(checkbox9);
+        panel.add(checkbox12);
         panel.add(checkbox10);
 
         JLabel label1 = new JLabel("历史命令单页最大回复量");
@@ -282,12 +291,12 @@ public class FloatingWindow extends JFrame {
             }
         });
 
-        label1.setBounds(10, 5 + borderHeight * 11, 150, contentHeight);
-        textField1.setBounds(label1.getWidth() + 20, 5 + borderHeight * 11, 20, contentHeight);
-        label2.setBounds(10, 5 + borderHeight * 12, 150, contentHeight);
-        textField2.setBounds(label2.getWidth() + 20, 5 + borderHeight * 12, 20, contentHeight);
-        label3.setBounds(10, 5 + borderHeight * 13, 55, contentHeight);
-        textField3.setBounds(label3.getWidth() + 20, 5 + borderHeight * 13, 20, contentHeight);
+        label1.setBounds(10, 5 + borderHeight * 12, 150, contentHeight);
+        textField1.setBounds(label1.getWidth() + 20, 5 + borderHeight * 12, 20, contentHeight);
+        label2.setBounds(10, 5 + borderHeight * 13, 150, contentHeight);
+        textField2.setBounds(label2.getWidth() + 20, 5 + borderHeight * 13, 20, contentHeight);
+        label3.setBounds(10, 5 + borderHeight * 14, 55, contentHeight);
+        textField3.setBounds(label3.getWidth() + 20, 5 + borderHeight * 14, 20, contentHeight);
         panel.add(label1);
         panel.add(textField1);
         panel.add(label2);

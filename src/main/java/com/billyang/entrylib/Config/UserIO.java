@@ -225,6 +225,13 @@ public class UserIO {
     public boolean getDeletePermission() {return getGlobalConfig("delete-permission").equals("1");}
 
     /**
+     * 获取 AtAll 解码权限
+     * @return AtAll 解码权限
+     * @see #getGlobalConfig(String)
+     */
+    public boolean getAtAllPermission() {return getGlobalConfig("at-all-permission").equals("1");}
+
+    /**
      * 获取图片缓存方式
      * @return 图片缓存方式
      * @see #getGlobalConfig(String)

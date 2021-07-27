@@ -2,11 +2,21 @@ package com.billyang.entrylib.MiraiCodeParser;
 
 import com.billyang.entrylib.Config.UserIO;
 import net.mamoe.mirai.event.events.GroupMessageEvent;
-import net.mamoe.mirai.message.data.Image;
 import net.mamoe.mirai.message.data.MessageChain;
 
 import java.io.File;
 
+/**
+ * Mirai 码解析器
+ * 负责将含有 Mirai 码的文本消息解码为包含多种消息内容的消息队列
+ * 并可将后者编码成为前者
+ * 构造本解析器时需要传递配置文件 UserIO
+ * @see UserIO
+ * @see FaceParser
+ * @see ImageParser
+ * @see AtParser
+ * @see AtAllParser
+ */
 public class CodeParser {
 
     String path;
@@ -14,6 +24,8 @@ public class CodeParser {
 
     FaceParser faceParser;
     ImageParser imageParser;
+    AtParser atParser;
+    AtAllParser atAllParser;
 
     /**
      * 初始化
@@ -30,6 +42,8 @@ public class CodeParser {
 
         faceParser = new FaceParser();
         imageParser = new ImageParser();
+        atParser = new AtParser();
+        atAllParser = new AtAllParser();
     }
 
     /**
@@ -48,6 +62,8 @@ public class CodeParser {
     public MessageChain Encode(MessageChain msgChain) {
         msgChain = faceParser.Face2PlainText(msgChain);
         msgChain = imageParser.Image2PlainText(uio, msgChain);
+        msgChain = atParser.At2PlainText(msgChain);
+        msgChain = atAllParser.AtAll2PlainText(msgChain);
 
         return msgChain;
     }
@@ -61,6 +77,8 @@ public class CodeParser {
     public MessageChain Decode(GroupMessageEvent g, String text) {
         MessageChain msgChain = faceParser.PlainText2Face(g, text);
         msgChain = imageParser.PlainText2Image(g, msgChain);
+        msgChain = atParser.PlainText2At(g, msgChain);
+        if(uio.getAtAllPermission()) msgChain = atAllParser.PlainText2AtAll(g, msgChain); //查询配置文件是否允许解码
 
         return msgChain;
     }

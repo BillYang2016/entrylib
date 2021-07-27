@@ -76,6 +76,7 @@ public class ImageParser {
 
     /**
      * 将图片 ID 转化为 Mirai 码
+     * @deprecated 已有可靠官方接口，弃用本方法
      * @param Id 图片 ID
      * @return Mirai 码
      */
@@ -104,10 +105,9 @@ public class ImageParser {
         for(SingleMessage msg : msgChain) {
             if(msg instanceof Image) {
                 Image img = (Image) msg;
-                String imageId = img.getImageId();
                 if(download) downloadImage(img);
 
-                msg = new PlainText(Id2MiraiCode(imageId));
+                msg = new PlainText(img.serializeToMiraiCode());
             }
             builder.append(msg);
         }

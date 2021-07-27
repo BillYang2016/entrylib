@@ -2,7 +2,7 @@
 
 EntryLib 是一个基于 [Mirai-Console](https://github.com/mamoe/mirai-console) 的插件，用于实现群词条、自定义回复或更多功能。
 
-![version](https://img.shields.io/badge/%E5%BD%93%E5%89%8D%E7%89%88%E6%9C%AC-v1.0.5-informational)
+![version](https://img.shields.io/badge/%E5%BD%93%E5%89%8D%E7%89%88%E6%9C%AC-v1.0.6-informational)
 
 ![GitHub issues](https://img.shields.io/github/issues/BillYang2016/entrylib)
 ![GitHub stars](https://img.shields.io/github/stars/BillYang2016/entrylib)
@@ -142,8 +142,9 @@ EntryLib 是一个基于 [Mirai-Console](https://github.com/mamoe/mirai-console)
 5. "history-max-height"：`3`表示对于历史指令，每页仅返回3个记录，请确保本数值为正整数
 6. "search-max-height"：`5`表示对于搜索指令，每页仅返回5个记录，请确保本数值为正整数
 7. "reply-mode"：`0`表示机器人将普通回复，`1`表示机器人回复时会@发送指令的成员，`2`表示机器人回复时会引用指令消息
-8. "xxx-permission"：包含各类命令的执行权限，`1`为管理员表示只有群管等级以上的成员才可以使用，`0`表示所有成员都可以使用
-9. "download-image"：`1`表示缓存接收到的图片（仅限于开关开启的群），修改为`0`表示不缓存。缓存图片可以保证您的词条图片不会丢失，但同时也会增加磁盘占用，若不缓存仅能保证在一个tx服务器缓存刷新周期内图片不会丢失（这个周期一般较长）
+8. "at-all-permission"：`0`表示默认不允许机器人发送@全体成员，此时它将会被解析为 Mirai 码，修改为`1`表示允许机器人发送（机器人是管理员时才可生效）
+9. "xxx-permission"：包含各类命令的执行权限，`1`为管理员表示只有群管等级以上的成员才可以使用，`0`表示所有成员都可以使用
+10. "download-image"：`1`表示缓存接收到的图片（仅限于开关开启的群），修改为`0`表示不缓存。缓存图片可以保证您的词条图片不会丢失，但同时也会增加磁盘占用，若不缓存仅能保证在一个tx服务器缓存刷新周期内图片不会丢失（这个周期一般较长）
 
 ## `input.json`
 本配置项提供用户键入指令的配置  
@@ -184,9 +185,10 @@ EntryLib 是一个基于 [Mirai-Console](https://github.com/mamoe/mirai-console)
 已适配的 Mirai 码：
 - [x] 纯文本
 - [x] 图片
-- [ ] At
-- [ ] AtAll
-- [x] Face
+- [x] At
+- [x] AtAll
+- [x] 表情
+- [ ] 语音（需要等待 Mirai 接口稳定）
 - [ ] 闪图（很可能不会适配）
 - [ ] 戳一戳（很可能不会适配）
 - [ ] Vip表情（Mirai 不支持发送，发送时会变成纯文本，因此不会适配）

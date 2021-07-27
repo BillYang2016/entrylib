@@ -9,6 +9,7 @@
   "search-permission":0,
   "all-permission":0,
   "delete-permission":1,
+  "at-all-permission":0,
   "download-image":1,
   "history-max-height":3,
   "search-max-height":5,
