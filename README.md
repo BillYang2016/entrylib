@@ -12,13 +12,14 @@ EntryLib 是一个基于 [Mirai-Console](https://github.com/mamoe/mirai-console)
 - [声明](#声明)
 - [使用方法](#使用方法)
 - [基本指令列表](#基本指令列表)
+- [匹配顺序](匹配顺序)
 - [群分组](#群分组)
 - [额外说明](#额外说明)
 - [配置项](#配置项)
 - [控制台](#控制台)
+- [FAQs](#faqs)
 - [Mirai 码支持](#mirai-码支持)
 - [数据库结构](#数据库结构)
-- [To-Do List](#to-do-list)
 - [插件依赖](#插件依赖)
 
 # 声明
@@ -104,6 +105,16 @@ EntryLib 是一个基于 [Mirai-Console](https://github.com/mamoe/mirai-console)
 **作用：开启或关闭对应群聊的插件开关**  
 *例：打开词条开关*  
 
+# 匹配顺序
+若存在多个满足条件的词条，查看/历史类指令优先返回规则如下：
+1. 检测是否有存在的精确匹配，若存在返回最小编号
+2. 检测是否有存在的模糊匹配，若存在返回最小编号
+3. 检测是否有存在的正则匹配，若存在返回最小编号
+
+-----
+
+以上规则有待优化，并加入手动调整优先级的方法
+
 # 群分组
 群分组为机器人提供了 对不同群的操作处理使用同一个数据库 的解决方案  
 在配置好了群分组文件后，在同一分组内的所有群共享一个数据库
@@ -179,6 +190,9 @@ EntryLib 是一个基于 [Mirai-Console](https://github.com/mamoe/mirai-console)
 2. 合并相同词条
 3. 覆盖相同词条
 
+# FAQs
+1. [#4. 请问如何才能让关键字触发的时候bot自动回复？](https://github.com/BillYang2016/entrylib/issues/4)
+
 # Mirai 码支持
 关于 Mirai 码的具体说明，请查看[Mirai 文档](https://github.com/mamoe/mirai/blob/dev/docs/Messages.md#mirai-%E7%A0%81)  
 
@@ -204,21 +218,10 @@ EntryLib 是一个基于 [Mirai-Console](https://github.com/mamoe/mirai-console)
 每个数据库使用`__MAIN_TABLE`作为主表，储存了所有词条名  
 每个词条单独建立`TABLE_[id]`表，储存该词条信息
 
-# To-Do List
-
-开发模块：
-- [x] Mirai通信
-- [x] 指令模块
-- [x] 数据库模块
-- [x] 用户OI
-- [x] GUI
-- [x] 语义分析
-
-功能模块：
-- [ ] 语音解析
-
 # 插件依赖
 本插件依赖于以下模块：
 - mirai-console
 - sqlite-jdbc
 - fastjson
+
+构建项目时请注意引用
