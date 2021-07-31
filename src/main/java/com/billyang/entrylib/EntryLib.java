@@ -34,7 +34,7 @@ import java.util.Timer;
 public final class EntryLib extends JavaPlugin {
     public static final EntryLib INSTANCE = new EntryLib();
     private EntryLib() {
-        super(new JvmPluginDescriptionBuilder("EntryLib", "1.0.7")
+        super(new JvmPluginDescriptionBuilder("EntryLib", "1.0.8")
                 .id("com.billyang.entrylib")
                 .info("Ask and replay plugin for Mirai-Console")
                 .author("Bill Yang")
@@ -493,7 +493,7 @@ public final class EntryLib extends JavaPlugin {
             String command = uio.parse(g.getMessage().contentToString()); //全局指令解析
 
             if(command != null) {
-                if(!uio.getSwitchPermission() || g.getSender().getPermission() != MemberPermission.MEMBER && !al.isAdmin(g.getSender().getId())) { //权限判断
+                if(!uio.getSwitchPermission() || g.getSender().getPermission() != MemberPermission.MEMBER || al.isAdmin(g.getSender().getId())) { //权限判断
                     if(command.equals("switch-on")) {
                         getLogger().info("Got Input Command: " + command);
                         if(eg.turnOn(g.getGroup().getId())) sendGroupMessage(g,"switch", "on");
