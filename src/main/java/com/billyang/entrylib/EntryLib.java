@@ -1,5 +1,6 @@
 package com.billyang.entrylib;
 
+import com.billyang.entrylib.Config.AdminLoader;
 import com.billyang.entrylib.Config.EnableGroups;
 import com.billyang.entrylib.Config.UserIO;
 import com.billyang.entrylib.Database.Database;
@@ -42,6 +43,7 @@ public final class EntryLib extends JavaPlugin {
 
     public UserIO uio = new UserIO();
     public EnableGroups eg = new EnableGroups();
+    public AdminLoader al = new AdminLoader();
     CodeParser cp;
     public PackageLoader pl = new PackageLoader();
     Tray tray = new Tray();
@@ -84,7 +86,7 @@ public final class EntryLib extends JavaPlugin {
             return;
         }
 
-        if(uio.getLearnPermission() && g.getSender().getPermission() == MemberPermission.MEMBER) { //权限判断
+        if(uio.getLearnPermission() && g.getSender().getPermission() == MemberPermission.MEMBER && !al.isAdmin(g.getSender().getId())) { //权限判断
             sendGroupMessage(g,"learn", "permission");
             return;
         }
@@ -124,7 +126,7 @@ public final class EntryLib extends JavaPlugin {
             return;
         }
 
-        if(uio.getViewPermission() && g.getSender().getPermission() == MemberPermission.MEMBER) { //权限判断
+        if(uio.getViewPermission() && g.getSender().getPermission() == MemberPermission.MEMBER && !al.isAdmin(g.getSender().getId())) { //权限判断
             if(!cancelError) sendGroupMessage(g,"view", "permission");
             return;
         }
@@ -191,7 +193,7 @@ public final class EntryLib extends JavaPlugin {
             return;
         }
 
-        if(uio.getHistoryPermission() && g.getSender().getPermission() == MemberPermission.MEMBER) { //权限判断
+        if(uio.getHistoryPermission() && g.getSender().getPermission() == MemberPermission.MEMBER && !al.isAdmin(g.getSender().getId())) { //权限判断
             sendGroupMessage(g,"history", "permission");
             return;
         }
@@ -287,7 +289,7 @@ public final class EntryLib extends JavaPlugin {
      * @see MatchLoader#search(long, String)
      */
     void processSearch(GroupMessageEvent g, String keyword, int page) {
-        if(uio.getSearchPermission() && g.getSender().getPermission() == MemberPermission.MEMBER) { //权限判断
+        if(uio.getSearchPermission() && g.getSender().getPermission() == MemberPermission.MEMBER && !al.isAdmin(g.getSender().getId())) { //权限判断
             sendGroupMessage(g,"search", "permission");
             return;
         }
@@ -356,7 +358,7 @@ public final class EntryLib extends JavaPlugin {
      * @see MatchLoader#all(long)
      */
     void processAll(GroupMessageEvent g, int page) {
-        if(uio.getAllPermission() && g.getSender().getPermission() == MemberPermission.MEMBER) { //权限判断
+        if(uio.getAllPermission() && g.getSender().getPermission() == MemberPermission.MEMBER && !al.isAdmin(g.getSender().getId())) { //权限判断
             sendGroupMessage(g,"all", "permission");
             return;
         }
@@ -429,7 +431,7 @@ public final class EntryLib extends JavaPlugin {
             return;
         }
 
-        if(uio.getDeletePermission() && g.getSender().getPermission() == MemberPermission.MEMBER) { //权限判断
+        if(uio.getDeletePermission() && g.getSender().getPermission() == MemberPermission.MEMBER && !al.isAdmin(g.getSender().getId())) { //权限判断
             sendGroupMessage(g,"delete", "permission");
             return;
         }
@@ -471,6 +473,7 @@ public final class EntryLib extends JavaPlugin {
 
         uio.init(this, DataFolderPath); //初始化用户交互
         eg.init(DataFolderPath, uio); //初始化群开关
+        al.init(DataFolderPath); //初始化管理员
         cp = new CodeParser(uio); //初始化转义器
         tray.create(this); //创建托盘
         if(!sgl.load(DataFolderPath, ErrorInfo)) { //加载群分组
@@ -490,7 +493,7 @@ public final class EntryLib extends JavaPlugin {
             String command = uio.parse(g.getMessage().contentToString()); //全局指令解析
 
             if(command != null) {
-                if(!uio.getSwitchPermission() || g.getSender().getPermission() != MemberPermission.MEMBER) { //权限判断
+                if(!uio.getSwitchPermission() || g.getSender().getPermission() != MemberPermission.MEMBER && !al.isAdmin(g.getSender().getId())) { //权限判断
                     if(command.equals("switch-on")) {
                         getLogger().info("Got Input Command: " + command);
                         if(eg.turnOn(g.getGroup().getId())) sendGroupMessage(g,"switch", "on");
