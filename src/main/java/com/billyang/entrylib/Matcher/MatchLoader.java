@@ -63,6 +63,8 @@ public class MatchLoader {
 
         if(stmt == null) return null;
 
+        title = title.replace("'","''"); //单引号转义
+
         int id = db.find_id(title); //精确匹配
         if(id > 0) {
             db.close();
@@ -160,6 +162,8 @@ public class MatchLoader {
         Statement stmt = db.stmt;
 
         if(stmt == null) return null;
+
+        keyword = keyword.replace("'","''"); //单引号转义
 
         List<MatchValue> list = new ArrayList<>();
 
@@ -305,7 +309,7 @@ public class MatchLoader {
      * @param list 词条列表
      * @return 去重后的词条列表
      */
-    static List<MatchValue> unique (List<MatchValue> list) {
+    static List<MatchValue> unique(List<MatchValue> list) {
         if(list.isEmpty()) return list;
 
         list.sort(new MatchValueComparator());

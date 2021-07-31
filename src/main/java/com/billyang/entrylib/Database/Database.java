@@ -139,6 +139,7 @@ public class Database {
 
     /**
      * 在主表中查询词条名所对应的词条ID
+     * 确保 title 已经过单引号转义
      * 返回负数表示异常
      * @param title 词条名
      * @return 词条ID，-1表示未连接数据库，-2表示异常，-3表示未找到
@@ -162,6 +163,7 @@ public class Database {
 
     /**
      * 新建词条表，并在主表中添加索引
+     * 确保 title 已经过单引号转义
      * 需保证即将创建的表不存在
      * @param title 词条名
      * @param type 匹配方式
@@ -204,6 +206,9 @@ public class Database {
      */
     public boolean insert(String title, String content, int type, StringBuilder ErrorInfo) {
         if(c == null && stmt == null) return false;
+
+        title = title.replace("'","''"); //单引号转义
+        content = content.replace("'","''"); //单引号转义
 
         int id = find_id(title);
         if(id == -3)
@@ -286,6 +291,8 @@ public class Database {
      */
     public boolean delete(String title, StringBuilder ErrorInfo) {
         if(c == null && stmt == null) return false;
+
+        title = title.replace("'","''"); //单引号转义
 
         int id = find_id(title);
         if(id == -3) {

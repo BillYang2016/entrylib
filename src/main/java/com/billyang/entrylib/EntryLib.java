@@ -33,7 +33,7 @@ import java.util.Timer;
 public final class EntryLib extends JavaPlugin {
     public static final EntryLib INSTANCE = new EntryLib();
     private EntryLib() {
-        super(new JvmPluginDescriptionBuilder("EntryLib", "1.0.6")
+        super(new JvmPluginDescriptionBuilder("EntryLib", "1.0.7")
                 .id("com.billyang.entrylib")
                 .info("Ask and replay plugin for Mirai-Console")
                 .author("Bill Yang")

@@ -21,32 +21,57 @@ public class JsonFormatter {
             ByteArrayInputStream in = new ByteArrayInputStream(jsonStr.getBytes());
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             int read, space = 0;
-            boolean first = true;
+            boolean first = true, quotation = false, escape = false;
 
             while((read = in.read()) > 0){
                 char ch = (char)read;
-                switch (ch) {
+                if(quotation) {
+                    out.write(ch); //在引号中，不予解析
+                    if(ch == '\\') {
+                        escape = !escape;
+                    } else if(ch == '"') {
+                        if(escape) escape = false;
+                        else quotation = false;
+                    } else escape = false;
+                }
+                else switch (ch) {
+                    case '\\': {
+                        escape = !escape;
+                        out.write(ch);
+                        break;
+                    }
+                    case '"': {
+                        if(escape) escape = false;
+                        else quotation = true;
+                        out.write(ch);
+                        break;
+                    }
                     case '{': {
+                        escape = false;
                         space = outputAndRightMove(space, ch, out, first);
                         break;
                     }
                     case '[': {
+                        escape = false;
                         out.write(ch);
                         space += 2;
                         break;
                     }
                     case '}':
                     case ']': {
+                        escape = false;
                         space = outputAndLeftMove(space, ch, out);
                         break;
                     }
                     case ',': {
+                        escape = false;
                         out.write(ch);
                         outputNewline(out);
                         out.write(getBlankingStringBytes(space));
                         break;
                     }
                     default: {
+                        escape = false;
                         out.write(ch);
                         break;
                     }
