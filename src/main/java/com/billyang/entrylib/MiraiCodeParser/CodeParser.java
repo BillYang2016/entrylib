@@ -24,6 +24,7 @@ public class CodeParser {
 
     FaceParser faceParser;
     ImageParser imageParser;
+    DiceParser diceParser;
     AtParser atParser;
     AtAllParser atAllParser;
 
@@ -42,6 +43,7 @@ public class CodeParser {
 
         faceParser = new FaceParser();
         imageParser = new ImageParser();
+        diceParser = new DiceParser();
         atParser = new AtParser();
         atAllParser = new AtAllParser();
     }
@@ -62,6 +64,7 @@ public class CodeParser {
     public MessageChain Encode(MessageChain msgChain) {
         msgChain = faceParser.Face2PlainText(msgChain);
         msgChain = imageParser.Image2PlainText(uio, msgChain);
+        msgChain = diceParser.Dice2PlainText(msgChain);
         msgChain = atParser.At2PlainText(msgChain);
         msgChain = atAllParser.AtAll2PlainText(msgChain);
 
@@ -77,6 +80,7 @@ public class CodeParser {
     public MessageChain Decode(GroupMessageEvent g, String text) {
         MessageChain msgChain = faceParser.PlainText2Face(g, text);
         msgChain = imageParser.PlainText2Image(g, msgChain);
+        msgChain = diceParser.PlainText2Dice(g, msgChain);
         msgChain = atParser.PlainText2At(g, msgChain);
         if(uio.getAtAllPermission()) msgChain = atAllParser.PlainText2AtAll(g, msgChain); //查询配置文件是否允许解码
 
