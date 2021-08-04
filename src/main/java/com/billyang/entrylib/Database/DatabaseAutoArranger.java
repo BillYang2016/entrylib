@@ -169,7 +169,7 @@ public class DatabaseAutoArranger extends TimerTask {
 
             while(rs.next()) {
                 String name = rs.getString("name");
-                if(!name.equals("__MAIN_TABLE"))existTables.add(Integer.parseInt(name.replace("TABLE_", "")));
+                if(!name.equals("__MAIN_TABLE") && !name.equals("__VERSION"))existTables.add(Integer.parseInt(name.replace("TABLE_", "")));
             }
 
             HashSet<Integer> hs1 = new HashSet(list), hs2 = new HashSet(existTables);

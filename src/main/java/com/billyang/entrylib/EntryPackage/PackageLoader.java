@@ -64,14 +64,14 @@ public class PackageLoader {
             if(id > 0) { //词条已存在
                 db.close();
                 if(overwrite == 1) {
-                    for(QueryValue qv: pv.getHistory())db.insert(groupId, pv.getTitle(), qv.getContent(), pv.getMode(), ErrorInfo);
+                    for(QueryValue qv: pv.getHistory())db.insert(groupId, pv.getTitle(), qv.getContent(), pv.getMode(), pv.getPriority(), ErrorInfo);
                 } else if(overwrite == 2) {
                     db.delete(groupId, pv.getTitle(), ErrorInfo);
-                    for(QueryValue qv: pv.getHistory())db.insert(groupId, pv.getTitle(), qv.getContent(), pv.getMode(), ErrorInfo);
+                    for(QueryValue qv: pv.getHistory())db.insert(groupId, pv.getTitle(), qv.getContent(), pv.getMode(), pv.getPriority(), ErrorInfo);
                 }
             } else if(id == -3) {
                 db.close();
-                for(QueryValue qv: pv.getHistory())db.insert(groupId, pv.getTitle(), qv.getContent(), pv.getMode(), ErrorInfo);
+                for(QueryValue qv: pv.getHistory())db.insert(groupId, pv.getTitle(), qv.getContent(), pv.getMode(), pv.getPriority(), ErrorInfo);
             } else {
                 db.close();
                 ErrorInfo.append("导入 ").append(pv.getTitle()).append(" 词条时出错啦！");
@@ -97,7 +97,7 @@ public class PackageLoader {
         for(MatchValue mv: matchList) {
             List<QueryValue> history = db.history(groupId, mv.getId(), ErrorInfo);
 
-            PackageValue pv = new PackageValue(mv.getTitle(), mv.getType(), history);
+            PackageValue pv = new PackageValue(mv.getTitle(), mv.getType(), mv.getPriority(), history);
 
             packageList.add(pv);
         }

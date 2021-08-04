@@ -22,7 +22,12 @@ public class PackageValue {
     public int getMode() {return mode;}
     public void setMode(int mode) {this.mode = mode;}
 
-    @JSONField(name = "history", ordinal = 3)
+    @JSONField(name = "priority", ordinal = 3)
+    private int priority;
+    public int getPriority() {return priority;}
+    public void setPriority(int priority) {this.priority = priority;}
+
+    @JSONField(name = "history", ordinal = 4)
     private List<QueryValue> history;
     public List<QueryValue> getHistory() {return history;}
     public void setHistory(List<QueryValue> history) {this.history = history;}
@@ -40,6 +45,23 @@ public class PackageValue {
         super();
         this.title = title;
         this.mode = mode;
+        this.priority = 2000;
+        this.history = history;
+    }
+
+    /**
+     * 构造函数
+     *
+     * @param title   词条名
+     * @param mode    匹配模式
+     * @param priority 匹配方式
+     * @param history 历史情况
+     */
+    public PackageValue(String title, int mode, int priority, List<QueryValue> history) {
+        super();
+        this.title = title;
+        this.mode = mode;
+        this.priority = priority;
         this.history = history;
     }
 

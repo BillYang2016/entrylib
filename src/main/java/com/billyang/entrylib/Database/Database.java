@@ -58,6 +58,27 @@ public class Database {
     public Statement stmt = null;
 
     /**
+     * 查询数据库中某个表中某个列是否存在
+     * @param table 表名
+     * @param column 列名
+     * @return 列的存在性
+     */
+    boolean exists(String table, String column) {
+        String sql = "select sql from sqlite_master where tbl_name='" + table + "' and type='table';";
+        try {
+            ResultSet rs = stmt.executeQuery(sql);
+            if(rs.next()) {
+                String content = rs.getString("sql");
+                return content.contains(column);
+            }
+            return false;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
      * 连接数据库
      * @param database 数据库
      * @return 连接情况
@@ -72,8 +93,15 @@ public class Database {
                 String sql = "CREATE TABLE __MAIN_TABLE " +
                         "(ID         INT           PRIMARY KEY NOT NULL," +   //编号
                         " TITLE      nvarchar(100) NOT NULL," +               //词条名
-                        " MATCH_MODE INT           NOT NULL DEFAULT 0)"       //匹配模式
+                        " MATCH_MODE INT           NOT NULL DEFAULT 0," +     //匹配模式
+                        " PRIORITY   INT           NOT NULL DEFAULT 2000)"    //优先级
                         ;
+                stmt.executeUpdate(sql);
+
+                sql = "CREATE TABLE __VERSION (VERSION         INT            PRIMARY KEY NOT NULL)"; //创建版本表
+                stmt.executeUpdate(sql);
+
+                sql = "INSERT INTO __VERSION (VERSION) VALUES (" + DatabaseUpdater.VERSION + ");"; //添加版本号
                 stmt.executeUpdate(sql);
             }
         } catch( Exception e ) {
@@ -167,16 +195,17 @@ public class Database {
      * 需保证即将创建的表不存在
      * @param title 词条名
      * @param type 匹配方式
+     * @param priority 优先级
      * @return 创建状态
      */
-    boolean create_map(String title, int type) {
+    boolean create_map(String title, int type, int priority) {
         if(c == null && stmt == null) return false;
 
         try {
             int id = max_id("__MAIN_TABLE") + 1;
 
-            String sql = "INSERT INTO __MAIN_TABLE (ID,TITLE,MATCH_MODE) " +
-                         "VALUES (" + id + ",'" + title + "'," + type + ");";
+            String sql = "INSERT INTO __MAIN_TABLE (ID,TITLE,MATCH_MODE,PRIORITY) " +
+                         "VALUES (" + id + ",'" + title + "'," + type + "," + priority + ");";
             stmt.executeUpdate(sql); //主表添加索引
 
             sql = "CREATE TABLE TABLE_" + id +
@@ -195,16 +224,37 @@ public class Database {
     }
 
     /**
+     * 查询 id 号词条表的匹配优先级
+     * 返回负数表示异常
+     * @param id 词条ID
+     * @return 优先级
+     */
+    public int getPriority(int id) {
+        if(c == null && stmt == null) return -1;
+
+        String sql = "SELECT PRIORITY FROM __MAIN_TABLE WHERE ID=" + id + ";";
+        try {
+            ResultSet rs = stmt.executeQuery(sql);
+            if(rs.next())return rs.getInt("PRIORITY");
+            else return -1;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return -1;
+        }
+    }
+
+    /**
      * 向词条插入新内容
      * 保证已连接数据库
      * 返回错误信息
      * @param title 词条名
      * @param content 新内容
      * @param type 匹配方式
+     * @param priority 优先级
      * @param ErrorInfo 传递错误信息
      * @return 插入状态
      */
-    public boolean insert(String title, String content, int type, StringBuilder ErrorInfo) {
+    public boolean insert(String title, String content, int type, int priority, StringBuilder ErrorInfo) {
         if(c == null && stmt == null) return false;
 
         title = title.replace("'","''"); //单引号转义
@@ -212,7 +262,7 @@ public class Database {
 
         int id = find_id(title);
         if(id == -3)
-            if(!create_map(title, type)) {
+            if(!create_map(title, type, priority)) {
                 close();
                 ErrorInfo.append("无法创建新表！");
                 return false;
@@ -221,6 +271,16 @@ public class Database {
             close();
             ErrorInfo.append("数据库查询异常！");
             return false;
+        } else {
+            String sql = "UPDATE __MAIN_TABLE SET MATCH_MODE = " + type + ", PRIORITY = " + priority + " WHERE ID = " + id + ";"; //修改匹配方式与优先级
+            try {
+                stmt.executeUpdate(sql);
+            } catch (SQLException e) {
+                ErrorInfo.append("无法修改").append(id).append("号词条表的匹配方式与优先级！");
+                e.printStackTrace();
+                close();
+                return false;
+            }
         }
 
         String table = "TABLE_" + id;
@@ -249,16 +309,17 @@ public class Database {
      * @param title 词条名
      * @param content 新内容
      * @param type 匹配方式
+     * @param priority 优先级
      * @param ErrorInfo 传递错误信息
      * @return 插入状态
      */
-    public boolean insert(long groupId, String title, String content, int type, StringBuilder ErrorInfo) {
+    public boolean insert(long groupId, String title, String content, int type, int priority, StringBuilder ErrorInfo) {
         if(!connect(groupId)) {
             ErrorInfo.append("数据库连接失败！");
             return false;
         }
 
-        return insert(title, content, type, ErrorInfo);
+        return insert(title, content, type, priority, ErrorInfo);
     }
 
     /**
@@ -268,17 +329,18 @@ public class Database {
      * @param title 词条名
      * @param content 新内容
      * @param type 匹配方式
+     * @param priority 优先级
      * @param ErrorInfo 传递错误信息
      * @return 插入状态
      * @see Subgroup
      */
-    public boolean insert(Subgroup subgroup, String title, String content, int type, StringBuilder ErrorInfo) {
+    public boolean insert(Subgroup subgroup, String title, String content, int type, int priority, StringBuilder ErrorInfo) {
         if(!connect(subgroup)) {
             ErrorInfo.append("数据库连接失败！");
             return false;
         }
 
-        return insert(title, content, type, ErrorInfo);
+        return insert(title, content, type, priority, ErrorInfo);
     }
 
     /**

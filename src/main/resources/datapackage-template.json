@@ -2,6 +2,7 @@
   {
     "title": "title_1",
     "mode": 0,
+    "priority": 2000,
     "history": [
       {
         "id": 1,
@@ -18,6 +19,7 @@
   {
     "title": "title_2",
     "mode": 1,
+    "priority": 3000,
     "history": [
       {
         "id": 1,

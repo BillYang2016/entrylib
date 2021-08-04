@@ -10,15 +10,28 @@ import java.util.List;
 import java.util.regex.*;
 
 /**
- * MatchValueComparator 类
+ * MatchValueComparator1 类
  * 比较器，对 Comparator 接口的实现
  * 使 MatchValue 的顺序为：id 第一关键字从小到大，匹配方式 type 第二关键字
+ * 用于去重
  */
-class MatchValueComparator implements Comparator<MatchValue> {
+class MatchValueComparator1 implements Comparator<MatchValue> {
     public int compare(MatchValue a, MatchValue b) {
         if(a.getId() < b.getId()) return -1; //先按照id排序
         if(a.getId() > b.getId()) return 1;
         return Integer.compare(a.getType(), b.getType()); //再按照匹配方式排序
+    }
+}
+
+/**
+ * MatchValueComparator2 类
+ * 比较器，对 Comparator 接口的实现
+ * 使 MatchValue 的顺序为：按照优先级从小到大排序
+ * 用于返回结果集
+ */
+class MatchValueComparator2 implements Comparator<MatchValue> {
+    public int compare(MatchValue a, MatchValue b) {
+        return Integer.compare(a.getPriority(), b.getPriority());
     }
 }
 
@@ -51,75 +64,18 @@ public class MatchLoader {
     /**
      * 返回根据词条名匹配到的一条信息
      * 保证数据库已连接
-     * 优化方向：可以直接调用 search，但会降低效率
+     * 通过调用 search 函数实现
      * 开发常见问题：ResultSet 对象统一，根据数据库查询动态改变
      * @param title 词条名
      * @return 一个 MatchValue 对象
-     * @see #search(long, String)
+     * @see #search(String, boolean)
      * @see MatchValue
      */
     public MatchValue match(String title) {
-        Statement stmt = db.stmt;
+        List<MatchValue> list = search(title, false);
 
-        if(stmt == null) return null;
-
-        title = title.replace("'","''"); //单引号转义
-
-        int id = db.find_id(title); //精确匹配
-        if(id > 0) {
-            db.close();
-            return new MatchValue(id, title, 0);
-        }
-
-        try {
-            String sql = "SELECT * FROM __MAIN_TABLE WHERE instr('" + title + "',TITLE) AND MATCH_MODE=1;"; //模糊匹配
-            ResultSet rs = stmt.executeQuery(sql);
-            List<MatchValue> list = new ArrayList<>();
-
-            while(rs.next()) {
-                id = rs.getInt("ID");
-                String target = rs.getString("TITLE");
-                list.add(new MatchValue(id, target, 1));
-            }
-            rs.close();
-
-            for(MatchValue mv : list) {
-                if(db.exists(stmt, "TABLE_" + mv.getId())) {
-                    db.close();
-                    return mv;
-                }
-            }
-        } catch( Exception e ) {
-            e.printStackTrace();
-        }
-
-        try {
-            String sql = "SELECT * FROM __MAIN_TABLE WHERE MATCH_MODE=2;"; //正则匹配（sqlite不支持，Java手动实现）
-            ResultSet rs = stmt.executeQuery(sql);
-            List<MatchValue> list = new ArrayList<>();
-
-            while(rs.next()) {
-                String pattern = rs.getString("TITLE");
-                boolean isMatch = Pattern.matches(pattern, title);
-                if(isMatch) {
-                    id = rs.getInt("ID");
-                    list.add(new MatchValue(id, pattern, 2));
-                }
-            }
-            rs.close();
-
-            for(MatchValue mv : list) {
-                if(db.exists(stmt, "TABLE_" + mv.getId())) {
-                    db.close();
-                    return mv;
-                }
-            }
-        } catch( Exception e ) {
-            e.printStackTrace();
-        }
-
-        db.close();
-        return new MatchValue(-1,null,-1);
+        if(list.isEmpty())return new MatchValue(-1,null,-1, 0);
+        else return list.get(0); //返回匹配优先级数值最小的
     }
 
     /**
@@ -158,7 +114,7 @@ public class MatchLoader {
      * @return 一个 MatchValue 列表
      * @see MatchValue
      */
-    public List<MatchValue> search(String keyword) {
+    public List<MatchValue> search(String keyword, boolean doSimilar) {
         Statement stmt = db.stmt;
 
         if(stmt == null) return null;
@@ -168,7 +124,7 @@ public class MatchLoader {
         List<MatchValue> list = new ArrayList<>();
 
         int id = db.find_id(keyword); //精确匹配
-        if(id > 0)list.add(new MatchValue(id, keyword, 0));
+        if(id > 0)list.add(new MatchValue(id, keyword, 0, db.getPriority(id)));
 
         try {
             String sql = "SELECT * FROM __MAIN_TABLE WHERE instr('" + keyword + "',TITLE) AND MATCH_MODE=1;"; //模糊匹配
@@ -176,7 +132,8 @@ public class MatchLoader {
             while(rs.next()) {
                 id = rs.getInt("ID");
                 String target = rs.getString("TITLE");
-                list.add(new MatchValue(id, target, 1));
+                int priority = rs.getInt("PRIORITY");
+                list.add(new MatchValue(id, target, 1, priority));
             }
             rs.close();
         } catch( Exception e ) {
@@ -191,7 +148,8 @@ public class MatchLoader {
                 boolean isMatch = Pattern.matches(pattern, keyword);
                 if(isMatch) {
                     id = rs.getInt("ID");
-                    list.add(new MatchValue(id, pattern, 2));
+                    int priority = rs.getInt("PRIORITY");
+                    list.add(new MatchValue(id, pattern, 2, priority));
                 }
             }
             rs.close();
@@ -199,20 +157,23 @@ public class MatchLoader {
             e.printStackTrace();
         }
 
-        try {
-            String sql = "SELECT * FROM __MAIN_TABLE WHERE TITLE LIKE '%" + keyword + "%'"; //寻找相似词条
-            ResultSet rs = stmt.executeQuery(sql);
-            while(rs.next()) {
-                id = rs.getInt("ID");
-                String target = rs.getString("TITLE");
-                list.add(new MatchValue(id, target, 3));
+        if(doSimilar) { //限制条件
+            try {
+                String sql = "SELECT * FROM __MAIN_TABLE WHERE TITLE LIKE '%" + keyword + "%'"; //寻找相似词条
+                ResultSet rs = stmt.executeQuery(sql);
+                while(rs.next()) {
+                    id = rs.getInt("ID");
+                    String target = rs.getString("TITLE");
+                    list.add(new MatchValue(id, target, 3, 4000));
+                }
+                rs.close();
+            } catch( Exception e ) {
+                e.printStackTrace();
             }
-            rs.close();
-        } catch( Exception e ) {
-            e.printStackTrace();
         }
 
         list.removeIf(mv -> !db.exists(stmt, "TABLE_" + mv.getId()));
+        list.removeIf(mv -> mv.getPriority() < 0);
 
         db.close();
         return unique(list);
@@ -228,7 +189,7 @@ public class MatchLoader {
     public List<MatchValue> search(long groupID, String keyword) {
         db.connect(groupID);
 
-        return search(keyword);
+        return search(keyword, true);
     }
 
     /**
@@ -242,7 +203,7 @@ public class MatchLoader {
     public List<MatchValue> search(Subgroup subgroup, String keyword) {
         db.connect(subgroup);
 
-        return search(keyword);
+        return search(keyword, true);
     }
 
     /**
@@ -265,7 +226,8 @@ public class MatchLoader {
                 int id = rs.getInt("ID");
                 String target = rs.getString("TITLE");
                 int type = rs.getInt("MATCH_MODE");
-                list.add(new MatchValue(id, target, type));
+                int priority = rs.getInt("PRIORITY");
+                list.add(new MatchValue(id, target, type, priority));
             }
             rs.close();
         } catch( Exception e ) {
@@ -312,7 +274,7 @@ public class MatchLoader {
     static List<MatchValue> unique(List<MatchValue> list) {
         if(list.isEmpty()) return list;
 
-        list.sort(new MatchValueComparator());
+        list.sort(new MatchValueComparator1());
 
         List<MatchValue> uniqueList = new ArrayList<>();
         int lastId = -1;
@@ -321,6 +283,8 @@ public class MatchLoader {
             if(mv.getId() != lastId) uniqueList.add(mv);
             lastId = mv.getId();
         }
+
+        uniqueList.sort(new MatchValueComparator2());
 
         return uniqueList;
     }

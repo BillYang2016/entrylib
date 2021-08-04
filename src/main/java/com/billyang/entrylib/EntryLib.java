@@ -5,6 +5,7 @@ import com.billyang.entrylib.Config.EnableGroups;
 import com.billyang.entrylib.Config.UserIO;
 import com.billyang.entrylib.Database.Database;
 import com.billyang.entrylib.Database.DatabaseAutoArranger;
+import com.billyang.entrylib.Database.DatabaseUpdater;
 import com.billyang.entrylib.Database.QueryValue;
 import com.billyang.entrylib.Matcher.MatchLoader;
 import com.billyang.entrylib.Matcher.MatchValue;
@@ -25,6 +26,8 @@ import net.mamoe.mirai.message.data.*;
 import java.util.Collections;
 import java.util.List;
 import java.util.Timer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * 主类 EntryLib
@@ -34,7 +37,7 @@ import java.util.Timer;
 public final class EntryLib extends JavaPlugin {
     public static final EntryLib INSTANCE = new EntryLib();
     private EntryLib() {
-        super(new JvmPluginDescriptionBuilder("EntryLib", "1.0.8")
+        super(new JvmPluginDescriptionBuilder("EntryLib", "1.1.0")
                 .id("com.billyang.entrylib")
                 .info("Ask and replay plugin for Mirai-Console")
                 .author("Bill Yang")
@@ -78,9 +81,9 @@ public final class EntryLib extends JavaPlugin {
      * @param content 新词条内容
      * @param type 匹配方式
      * @see #sendGroupMessage(GroupMessageEvent, String, String, String...) 
-     * @see Database#insert(long, String, String, int, StringBuilder) 
+     * @see Database#insert(long, String, String, int, int, StringBuilder)
      */
-    void processLearn(GroupMessageEvent g, String title, String content, int type) {
+    void processLearn(GroupMessageEvent g, String title, String content, int type, int priority) {
         if(!Security.checkTitle(uio, title)) {
             sendGroupMessage(g,"learn", "reject", title);
             return;
@@ -97,8 +100,8 @@ public final class EntryLib extends JavaPlugin {
         Database db = new Database(); //新建数据库对象
 
         Subgroup subgroup = sgl.get(g.getGroup().getId());
-        if(subgroup == null) status = db.insert(g.getGroup().getId(), title, content, type, ErrorInfo); //向数据库插入
-        else status = db.insert(subgroup, title, content, type, ErrorInfo);
+        if(subgroup == null) status = db.insert(g.getGroup().getId(), title, content, type, priority, ErrorInfo); //向数据库插入
+        else status = db.insert(subgroup, title, content, type, priority, ErrorInfo);
 
         if(status) sendGroupMessage(g,"learn", "done", title);
         else {
@@ -471,6 +474,7 @@ public final class EntryLib extends JavaPlugin {
 
         StringBuilder ErrorInfo = new StringBuilder();
 
+        new DatabaseUpdater(this).update(); //升级数据库
         uio.init(this, DataFolderPath); //初始化用户交互
         eg.init(DataFolderPath, uio); //初始化群开关
         al.init(DataFolderPath); //初始化管理员
@@ -570,7 +574,18 @@ public final class EntryLib extends JavaPlugin {
                     else if(sType.contains("正则")) type = 2;
                 }
 
-                processLearn(g, title, content, type);
+                int priority = 2000; //优先级
+
+                if(splitedMsg.length > 4) {
+                    String sPriority = splitedMsg[4];
+                    String regex="[^0-9]";
+                    Pattern p = Pattern.compile(regex);
+                    Matcher m = p.matcher(sPriority);
+                    priority = Integer.parseInt(m.replaceAll("").trim());
+                    if(priority > 5000) priority = 5000;
+                }
+
+                processLearn(g, title, content, type, priority);
 
             } else if(command.equals("view")) { //查看类命令
 
