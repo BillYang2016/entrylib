@@ -10,6 +10,7 @@ EntryLib 是一个基于 [Mirai-Console](https://github.com/mamoe/mirai-console)
 
 # 目录
 - [声明](#声明)
+- [FAQs](#faqs)
 - [使用方法](#使用方法)
 - [基本指令列表](#基本指令列表)
 - [匹配顺序](#匹配顺序)
@@ -17,7 +18,6 @@ EntryLib 是一个基于 [Mirai-Console](https://github.com/mamoe/mirai-console)
 - [额外说明](#额外说明)
 - [配置项](#配置项)
 - [控制台](#控制台)
-- [FAQs](#faqs)
 - [Mirai 码支持](#mirai-码支持)
 - [数据库结构](#数据库结构)
 - [插件依赖](#插件依赖)
@@ -27,6 +27,10 @@ EntryLib 是一个基于 [Mirai-Console](https://github.com/mamoe/mirai-console)
 - [欢迎加入~~原神~~交流群：735209171](https://jq.qq.com/?_wv=1027&k=5cV7uEJ)
 - 如果在使用插件过程中遇到任何问题，请发送 [Issues](https://github.com/BillYang2016/entrylib/issues) 询问
 - 插件开发初期，有许多期待完善之处，欢迎提交代码风格相似的 [PR](https://github.com/BillYang2016/entrylib/pulls)
+
+# FAQs
+1. [#4. 请问如何才能让关键字触发的时候bot自动回复？](https://github.com/BillYang2016/entrylib/issues/4)
+2. 更多使用问题请查看 [Closed Issue](https://github.com/BillYang2016/entrylib/issues?q=is%3Aissue+is%3Aclosed)，这可以解决您 90% 的问题
 
 ## 可用 console 版本
 
@@ -209,11 +213,8 @@ EntryLib 是一个基于 [Mirai-Console](https://github.com/mamoe/mirai-console)
 
 关于导入导出文件的版本问题，请见[兼容性问题](#兼容性问题)
 
-# FAQs
-1. [#4. 请问如何才能让关键字触发的时候bot自动回复？](https://github.com/BillYang2016/entrylib/issues/4)
-
 # Mirai 码支持
-关于 Mirai 码的具体说明，请查看[Mirai 文档](https://github.com/mamoe/mirai/blob/dev/docs/Messages.md#mirai-%E7%A0%81)  
+关于 Mirai 码的具体说明，请查看 [Mirai 文档](https://github.com/mamoe/mirai/blob/dev/docs/Messages.md#mirai-%E7%A0%81)  
 
 已适配的 Mirai 码：
 - [x] 纯文本
@@ -234,7 +235,7 @@ EntryLib 是一个基于 [Mirai-Console](https://github.com/mamoe/mirai-console)
 
 ### 唯一消息限制
 由于 Mirai 元素唯一性的限制，部分消息（如骰子、语音、戳一戳等）只能单一存在，这也是符合现实的：一条消息如果包含了语音，就不能同时包含群文件、提及全体成员、文字内容等元素。  
-如何让机器人学习唯一消息：请使用[ Mirai 码](https://github.com/mamoe/mirai/blob/dev/docs/Messages.md#mirai-%E7%A0%81)，如：`学习#骰子#[mirai:dice:5]`  
+如何让机器人学习唯一消息：请使用 [Mirai 码](https://github.com/mamoe/mirai/blob/dev/docs/Messages.md#mirai-%E7%A0%81)，如：`学习#骰子#[mirai:dice:5]`  
 若机器人在同一个词条中储存了多个唯一消息，将会仅发送最后的唯一消息  
 
 ### 骰子随机性
