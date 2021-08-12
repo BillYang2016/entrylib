@@ -37,7 +37,7 @@ import java.util.regex.Pattern;
 public final class EntryLib extends JavaPlugin {
     public static final EntryLib INSTANCE = new EntryLib();
     private EntryLib() {
-        super(new JvmPluginDescriptionBuilder("EntryLib", "1.1.0")
+        super(new JvmPluginDescriptionBuilder("EntryLib", "1.1.1")
                 .id("com.billyang.entrylib")
                 .info("Ask and replay plugin for Mirai-Console")
                 .author("Bill Yang")
@@ -478,7 +478,7 @@ public final class EntryLib extends JavaPlugin {
         uio.init(this, DataFolderPath); //初始化用户交互
         eg.init(DataFolderPath, uio); //初始化群开关
         al.init(DataFolderPath); //初始化管理员
-        cp = new CodeParser(uio); //初始化转义器
+        cp = new CodeParser(DataFolderPath, uio); //初始化转义器
         tray.create(this); //创建托盘
         if(!sgl.load(DataFolderPath, ErrorInfo)) { //加载群分组
             getLogger().error(ErrorInfo.toString());

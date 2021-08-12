@@ -37,8 +37,8 @@ public class ImageParser {
      * 构造函数
      * 自动初始化
      */
-    public ImageParser() {
-        init("data/EntryLib");
+    public ImageParser(String path) {
+        init(path);
     }
 
     /**
@@ -56,7 +56,7 @@ public class ImageParser {
 
             URLConnection conn = url.openConnection();
             InputStream inStream = conn.getInputStream();
-            FileOutputStream fs = new FileOutputStream(path + imageId);
+            FileOutputStream fs = new FileOutputStream(new File(path, imageId));
 
             byte[] buffer = new byte[1204];
             int byteread;

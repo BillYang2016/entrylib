@@ -42,7 +42,7 @@ public class CodeParser {
         }
 
         faceParser = new FaceParser();
-        imageParser = new ImageParser();
+        imageParser = new ImageParser(path);
         diceParser = new DiceParser();
         atParser = new AtParser();
         atAllParser = new AtAllParser();
@@ -52,8 +52,8 @@ public class CodeParser {
      * 构造函数
      * 自动初始化
      */
-    public CodeParser(UserIO uio) {
-        init("data/EntryLib", uio);
+    public CodeParser(String path, UserIO uio) {
+        init(path, uio);
     }
 
     /**
