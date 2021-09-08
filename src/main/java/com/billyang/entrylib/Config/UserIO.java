@@ -81,17 +81,25 @@ public class UserIO {
     /**
      * 加载输入配置
      */
-    void initInput() {loadFile("input.json");}
+    void initInput() {
+        String fileName = "input.json";
+        File file = new File(path, fileName);
+        if(!file.exists()) loadFile(fileName);
+    }
 
     /**
      * 加载输出配置
      */
-    void initOutput() {loadFile("output.json");}
+    void initOutput() {
+        loadFile("output.json");
+    }
 
     /**
      * 加载全局配置
      */
-    void initGlobalConfig() {loadFile("global.json");}
+    void initGlobalConfig() {
+        loadFile("global.json");
+    }
 
     /**
      * 初始化
