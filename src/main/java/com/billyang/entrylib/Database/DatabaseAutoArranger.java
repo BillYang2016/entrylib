@@ -35,7 +35,7 @@ class ImageCleaner implements Runnable {
      * 线程运行方法
      */
     public void run() {
-        File imageFolder = new File("data/EntryLib/images/");
+        File imageFolder = new File(Database.DATABASES_PATH);
         if(imageFolder.exists()) {
             List<File> tempList = Arrays.asList(imageFolder.listFiles());
             List<File> imageFiles = new ArrayList(tempList);
@@ -113,7 +113,7 @@ public class DatabaseAutoArranger extends TimerTask {
     boolean connect(String database) {
         try {
             Class.forName("org.sqlite.JDBC");
-            c = DriverManager.getConnection("jdbc:sqlite:data/EntryLib/databases/" + database);
+            c = DriverManager.getConnection("jdbc:sqlite:" + Database.DATABASES_PATH + database);
 
             stmt = c.createStatement();
             if(!exists(stmt, "__MAIN_TABLE")) return false;
@@ -315,7 +315,7 @@ public class DatabaseAutoArranger extends TimerTask {
             end = mt.end();
 
             String imageId = ImageParser.MiraiCode2Id(text.substring(start, end));
-            File file = new File("data/EntryLib/images/", imageId);
+            File file = new File("data/com.billyang.entrylib/images/", imageId);
 
             if(file.exists())list.add(file);
         }
@@ -365,7 +365,7 @@ public class DatabaseAutoArranger extends TimerTask {
      */
     @Override
     public void run() {
-        File file = new File("data/EntryLib/databases/");
+        File file = new File(Database.DATABASES_PATH);
         if(!file.exists()) return;
 
         File[] files = file.listFiles();

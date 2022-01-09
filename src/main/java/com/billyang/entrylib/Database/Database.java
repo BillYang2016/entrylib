@@ -17,12 +17,14 @@ import java.util.Random;
  */
 public class Database {
 
+    public final static String DATABASES_PATH = "data/com.billyang.entrylib/databases/";
+
     /**
      * 初始化
      * @return 成功状态
      */
     public boolean init() {
-        File file = new File("data/EntryLib/databases/");
+        File file = new File(DATABASES_PATH);
         if(!file.exists()) {
             file.mkdirs();
         }
@@ -117,7 +119,7 @@ public class Database {
      * @return 连接情况
      */
     public boolean connect(long groupId) {
-        return connect("jdbc:sqlite:data/EntryLib/databases/" + groupId + ".db");
+        return connect("jdbc:sqlite:" + DATABASES_PATH + groupId + ".db");
     }
 
     /**
@@ -127,7 +129,7 @@ public class Database {
      * @see Subgroup
      */
     public boolean connect(Subgroup subgroup) {
-        return connect("jdbc:sqlite:data/EntryLib/databases/" + subgroup.getName() + ".db");
+        return connect("jdbc:sqlite:" + DATABASES_PATH + subgroup.getName() + ".db");
     }
 
     /**

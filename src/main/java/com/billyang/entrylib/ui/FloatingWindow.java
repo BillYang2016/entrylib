@@ -1,6 +1,7 @@
 package com.billyang.entrylib.ui;
 
 import com.billyang.entrylib.Config.UserIO;
+import com.billyang.entrylib.Database.Database;
 import com.billyang.entrylib.EntryLib;
 import com.billyang.entrylib.Matcher.MatchLoader;
 
@@ -344,7 +345,7 @@ public class FloatingWindow extends JFrame {
                 groupId = 0;
             }
 
-            File database = new File("data/EntryLib/databases/", groupId + ".db");
+            File database = new File(Database.DATABASES_PATH, groupId + ".db");
             if(!database.exists()) {
                 JOptionPane.showMessageDialog(
                         panel, "目标群数据库不存在", "错误", JOptionPane.ERROR_MESSAGE

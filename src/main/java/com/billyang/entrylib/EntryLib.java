@@ -469,6 +469,8 @@ public final class EntryLib extends JavaPlugin {
     @Override
     public void onEnable() {
 
+        pl.init();
+
         String DataFolderPath = getDataFolder().getAbsolutePath();
         getLogger().info("配置文件目录：" + DataFolderPath);
 
