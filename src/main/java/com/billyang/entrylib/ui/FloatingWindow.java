@@ -345,7 +345,7 @@ public class FloatingWindow extends JFrame {
                 groupId = 0;
             }
 
-            File database = new File(Database.DATABASES_PATH, groupId + ".db");
+            File database = new File(EntryLib.DATABASES_FOLDER, groupId + ".db");
             if(!database.exists()) {
                 JOptionPane.showMessageDialog(
                         panel, "目标群数据库不存在", "错误", JOptionPane.ERROR_MESSAGE
