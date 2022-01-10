@@ -106,7 +106,7 @@ public class DatabaseUpdater {
      * 数据库升级任务
      */
     public void update() {
-        File file = new File("data/EntryLib/databases/");
+        File file = new File(EntryLib.DATABASES_FOLDER);
         if(!file.exists()) return;
 
         File[] files = file.listFiles();
@@ -121,7 +121,7 @@ public class DatabaseUpdater {
             String fileName = dbFile.getName();
             if(!fileName.endsWith(".db")) continue; //保证文件是数据库文件
 
-            if(!database.connect("jdbc:sqlite:data/EntryLib/databases/" + fileName)) {
+            if(!database.connect("jdbc:sqlite:" + EntryLib.DATABASES_FOLDER + fileName)) {
                 entrylib.getLogger().warning("无法升级数据库" + fileName + "：数据库连接失败！");
                 database.close();
                 continue;

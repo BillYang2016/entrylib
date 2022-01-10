@@ -31,7 +31,8 @@ public class PackageLoader {
      * 自动初始化
      */
     public PackageLoader() {
-        init();
+        // 自动初始化会导致数据文件被占用，mirai-console 无法自动迁移
+//        init();
     }
 
     /**

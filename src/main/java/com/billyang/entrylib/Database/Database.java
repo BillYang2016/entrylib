@@ -1,5 +1,6 @@
 package com.billyang.entrylib.Database;
 
+import com.billyang.entrylib.EntryLib;
 import com.billyang.entrylib.Subgroup.Subgroup;
 
 import java.io.File;
@@ -22,8 +23,9 @@ public class Database {
      * @return 成功状态
      */
     public boolean init() {
-        File file = new File("data/EntryLib/databases/");
+        File file = new File(EntryLib.DATABASES_FOLDER);
         if(!file.exists()) {
+            EntryLib.INSTANCE.getLogger().info("创建数据库目录");
             file.mkdirs();
         }
 
@@ -117,7 +119,7 @@ public class Database {
      * @return 连接情况
      */
     public boolean connect(long groupId) {
-        return connect("jdbc:sqlite:data/EntryLib/databases/" + groupId + ".db");
+        return connect("jdbc:sqlite:" + EntryLib.DATABASES_FOLDER + groupId + ".db");
     }
 
     /**
@@ -127,7 +129,7 @@ public class Database {
      * @see Subgroup
      */
     public boolean connect(Subgroup subgroup) {
-        return connect("jdbc:sqlite:data/EntryLib/databases/" + subgroup.getName() + ".db");
+        return connect("jdbc:sqlite:" + EntryLib.DATABASES_FOLDER + subgroup.getName() + ".db");
     }
 
     /**

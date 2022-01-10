@@ -16,6 +16,7 @@ import java.util.regex.Pattern;
  * 清理没有用过的图片
  */
 class ImageCleaner implements Runnable {
+
     private Thread t;
 
     EntryLib entrylib;
@@ -35,7 +36,7 @@ class ImageCleaner implements Runnable {
      * 线程运行方法
      */
     public void run() {
-        File imageFolder = new File("data/EntryLib/images/");
+        File imageFolder = new File(EntryLib.IMAGES_FOLDER);
         if(imageFolder.exists()) {
             List<File> tempList = Arrays.asList(imageFolder.listFiles());
             List<File> imageFiles = new ArrayList(tempList);
@@ -113,7 +114,7 @@ public class DatabaseAutoArranger extends TimerTask {
     boolean connect(String database) {
         try {
             Class.forName("org.sqlite.JDBC");
-            c = DriverManager.getConnection("jdbc:sqlite:data/EntryLib/databases/" + database);
+            c = DriverManager.getConnection("jdbc:sqlite:" + EntryLib.DATABASES_FOLDER + database);
 
             stmt = c.createStatement();
             if(!exists(stmt, "__MAIN_TABLE")) return false;
@@ -315,7 +316,7 @@ public class DatabaseAutoArranger extends TimerTask {
             end = mt.end();
 
             String imageId = ImageParser.MiraiCode2Id(text.substring(start, end));
-            File file = new File("data/EntryLib/images/", imageId);
+            File file = new File(EntryLib.IMAGES_FOLDER, imageId);
 
             if(file.exists())list.add(file);
         }
@@ -365,7 +366,7 @@ public class DatabaseAutoArranger extends TimerTask {
      */
     @Override
     public void run() {
-        File file = new File("data/EntryLib/databases/");
+        File file = new File(EntryLib.DATABASES_FOLDER);
         if(!file.exists()) return;
 
         File[] files = file.listFiles();
