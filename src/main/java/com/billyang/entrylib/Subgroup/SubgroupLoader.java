@@ -110,6 +110,18 @@ public class SubgroupLoader {
     public Subgroup get(long groupId) {return map.get(groupId);}
 
     /**
+     * 通过分组名获取分组
+     * 如果未找到，则返回null
+     * @param name 分组名
+     * @return 分组
+     */
+    public Subgroup find(String name) {
+        for(Subgroup subgroup: list)
+            if(subgroup.getName().equals(name))return subgroup;
+        return null;
+    }
+
+    /**
      * 清空群分组配置
      */
     public void clear() {

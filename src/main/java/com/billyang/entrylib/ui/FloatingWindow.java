@@ -4,6 +4,7 @@ import com.billyang.entrylib.Config.UserIO;
 import com.billyang.entrylib.Database.Database;
 import com.billyang.entrylib.EntryLib;
 import com.billyang.entrylib.Matcher.MatchLoader;
+import com.billyang.entrylib.Subgroup.Subgroup;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -321,6 +322,11 @@ public class FloatingWindow extends JFrame {
         }
     }
 
+    boolean isNumeric(String text) {
+        if(text == null || text.equals(""))return false;
+        return text.matches("^[0-9]*$");
+    }
+
     void addPackageLeadingPage() {
         JPanel panel = new JPanel();
 
@@ -329,44 +335,83 @@ public class FloatingWindow extends JFrame {
         int borderHeight = (height - 10) / 5, contentHeight = borderHeight - 2;
 
         JLabel label1 = new JLabel("导出模块");
-        JLabel label2 = new JLabel("群号");
+        JLabel label2 = new JLabel("群号或分组名");
 
         JTextField textField1 = new JTextField();
-        textField1.addKeyListener(new DigitOnlyKeyListener());
+        // textField1.addKeyListener(new DigitOnlyKeyListener());
 
         JButton button1 = new JButton("导出词条库");
         button1.addActionListener(e -> {
-            File file = new File(entrylib.getDataFolder().getAbsolutePath(), "entry-package.json");
-            long groupId;
-
-            try {
-                groupId = Long.parseLong(textField1.getText());
-            } catch (Exception exception) {
-                groupId = 0;
+            if(textField1.getText() == null || textField1.getText().equals("")) {
+                JOptionPane.showMessageDialog(
+                        panel, "请输入目标群号或群分组名！", "警告", JOptionPane.WARNING_MESSAGE
+                );
+                return;
             }
 
-            File database = new File(EntryLib.DATABASES_FOLDER, groupId + ".db");
-            if(!database.exists()) {
-                JOptionPane.showMessageDialog(
-                        panel, "目标群数据库不存在", "错误", JOptionPane.ERROR_MESSAGE
-                );
-            } else {
-                StringBuilder ErrorInfo = new StringBuilder();
-                if(entrylib.pl.leadOut(new MatchLoader(), groupId, file, ErrorInfo)) {
+            File file = new File(entrylib.getDataFolder().getAbsolutePath(), "entry-package.json");
+
+            String text = textField1.getText().trim();
+
+            if(isNumeric(text)) { //是数字，转群号
+                long groupId;
+
+                try {
+                    groupId = Long.parseLong(text);
+                } catch (Exception exception) {
+                    groupId = 0;
+                }
+
+                File database = new File(EntryLib.DATABASES_FOLDER, groupId + ".db");
+                if(!database.exists()) {
                     JOptionPane.showMessageDialog(
-                            panel, "导出完成，已导出到 " + file.getAbsolutePath(), "成功", JOptionPane.INFORMATION_MESSAGE
+                            panel, "目标群数据库不存在", "错误", JOptionPane.ERROR_MESSAGE
                     );
                 } else {
+                    StringBuilder ErrorInfo = new StringBuilder();
+                    if (entrylib.pl.leadOut(new MatchLoader(), groupId, file, ErrorInfo)) {
+                        JOptionPane.showMessageDialog(
+                                panel, "导出完成，已导出到 " + file.getAbsolutePath(), "成功", JOptionPane.INFORMATION_MESSAGE
+                        );
+                    } else {
+                        JOptionPane.showMessageDialog(
+                                panel, "导出失败\n" + ErrorInfo.toString(), "错误", JOptionPane.ERROR_MESSAGE
+                        );
+                    }
+                }
+            } else { //不是数字，转群分组
+                Subgroup subgroup = entrylib.sgl.find(text);
+
+                if(subgroup == null) {
                     JOptionPane.showMessageDialog(
-                            panel, "导出失败\n" + ErrorInfo.toString(), "错误", JOptionPane.ERROR_MESSAGE
+                            panel, "目标群分组数据库不存在", "错误", JOptionPane.ERROR_MESSAGE
                     );
+                    return;
+                }
+
+                File database = new File(EntryLib.DATABASES_FOLDER, text + ".db");
+                if(!database.exists()) {
+                    JOptionPane.showMessageDialog(
+                            panel, "目标群分组数据库不存在", "错误", JOptionPane.ERROR_MESSAGE
+                    );
+                } else {
+                    StringBuilder ErrorInfo = new StringBuilder();
+                    if (entrylib.pl.leadOut(new MatchLoader(), subgroup, file, ErrorInfo)) {
+                        JOptionPane.showMessageDialog(
+                                panel, "导出完成，已导出到 " + file.getAbsolutePath(), "成功", JOptionPane.INFORMATION_MESSAGE
+                        );
+                    } else {
+                        JOptionPane.showMessageDialog(
+                                panel, "导出失败\n" + ErrorInfo.toString(), "错误", JOptionPane.ERROR_MESSAGE
+                        );
+                    }
                 }
             }
         });
 
         label1.setBounds(65, 5, 55, contentHeight);
-        label2.setBounds(10, 5 + borderHeight, 28, contentHeight);
-        textField1.setBounds(50, 5 + borderHeight, 100, contentHeight);
+        label2.setBounds(10, 5 + borderHeight, 83, contentHeight);
+        textField1.setBounds(105, 5 + borderHeight, 100, contentHeight);
         button1.setBounds(40, 5 + borderHeight * 2 + 5, 100, contentHeight);
         panel.add(label1);
         panel.add(label2);
@@ -378,11 +423,11 @@ public class FloatingWindow extends JFrame {
         panel.add(separator);
 
         JLabel label3= new JLabel("导入模块");
-        JLabel label4 = new JLabel("群号");
+        JLabel label4 = new JLabel("群号或分组名");
         JLabel label5 = new JLabel("覆盖选项");
 
         JTextField textField2 = new JTextField();
-        textField2.addKeyListener(new DigitOnlyKeyListener());
+        // textField2.addKeyListener(new DigitOnlyKeyListener());
 
         String[] list = new String[]{"不覆盖相同词条", "合并相同词条", "覆盖相同词条"};
         JComboBox<String> comboBox = new JComboBox<>(list);
@@ -397,37 +442,66 @@ public class FloatingWindow extends JFrame {
         button2.addActionListener(e -> {
             if(textField2.getText() == null || textField2.getText().equals("")) {
                 JOptionPane.showMessageDialog(
-                        panel, "请输入目标群号！", "警告", JOptionPane.WARNING_MESSAGE
+                        panel, "请输入目标群号或群分组名！", "警告", JOptionPane.WARNING_MESSAGE
                 );
             } else {
-                long groupId;
 
-                try {
-                    groupId = Long.parseLong(textField2.getText());
-                } catch (Exception exception) {
-                    groupId = 0;
-                }
+                String text = textField2.getText().trim();
 
-                int result = fileChooser.showOpenDialog(panel);
-                if(result == JFileChooser.APPROVE_OPTION) { //点击了确定
-                    File file = fileChooser.getSelectedFile();
-                    StringBuilder ErrorInfo = new StringBuilder();
-                    if(entrylib.pl.leadIn(groupId, file, comboBox.getSelectedIndex(), ErrorInfo)) {
+                if(isNumeric(text)) { //是数字，转群号
+                    long groupId;
+
+                    try {
+                        groupId = Long.parseLong(text);
+                    } catch (Exception exception) {
+                        groupId = 0;
+                    }
+
+                    int result = fileChooser.showOpenDialog(panel);
+                    if (result == JFileChooser.APPROVE_OPTION) { //点击了确定
+                        File file = fileChooser.getSelectedFile();
+                        StringBuilder ErrorInfo = new StringBuilder();
+                        if (entrylib.pl.leadIn(groupId, file, comboBox.getSelectedIndex(), ErrorInfo)) {
+                            JOptionPane.showMessageDialog(
+                                    panel, "导入完成！", "成功", JOptionPane.INFORMATION_MESSAGE
+                            );
+                        } else {
+                            JOptionPane.showMessageDialog(
+                                    panel, "导入失败\n" + ErrorInfo.toString(), "错误", JOptionPane.ERROR_MESSAGE
+                            );
+                        }
+                    }
+                } else { //不是数字，转群分组
+                    Subgroup subgroup = entrylib.sgl.find(text);
+
+                    if(subgroup == null) {
                         JOptionPane.showMessageDialog(
-                                panel, "导入完成！", "成功", JOptionPane.INFORMATION_MESSAGE
+                                panel, "目标群分组数据库不存在", "错误", JOptionPane.ERROR_MESSAGE
                         );
-                    } else {
-                        JOptionPane.showMessageDialog(
-                                panel, "导入失败\n" + ErrorInfo.toString(), "错误", JOptionPane.ERROR_MESSAGE
-                        );
+                        return;
+                    }
+
+                    int result = fileChooser.showOpenDialog(panel);
+                    if (result == JFileChooser.APPROVE_OPTION) { //点击了确定
+                        File file = fileChooser.getSelectedFile();
+                        StringBuilder ErrorInfo = new StringBuilder();
+                        if (entrylib.pl.leadIn(subgroup, file, comboBox.getSelectedIndex(), ErrorInfo)) {
+                            JOptionPane.showMessageDialog(
+                                    panel, "导入完成！", "成功", JOptionPane.INFORMATION_MESSAGE
+                            );
+                        } else {
+                            JOptionPane.showMessageDialog(
+                                    panel, "导入失败\n" + ErrorInfo.toString(), "错误", JOptionPane.ERROR_MESSAGE
+                            );
+                        }
                     }
                 }
             }
         });
 
         label3.setBounds(325, 5, 55, contentHeight);
-        label4.setBounds(270, 5 + borderHeight, 28, contentHeight);
-        textField2.setBounds(310, 5 + borderHeight, 100, contentHeight);
+        label4.setBounds(270, 5 + borderHeight, 83, contentHeight);
+        textField2.setBounds(365, 5 + borderHeight, 100, contentHeight);
         label5.setBounds(270, 5 + borderHeight * 2, 55, contentHeight);
         comboBox.setBounds(340, 5 + borderHeight * 2, 130, contentHeight);
         button2.setBounds(310, 5 + borderHeight * 3 + 5, 100, contentHeight);

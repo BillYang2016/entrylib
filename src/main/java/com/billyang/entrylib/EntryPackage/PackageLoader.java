@@ -6,6 +6,7 @@ import com.billyang.entrylib.Config.UserIO;
 import com.billyang.entrylib.Database.*;
 import com.billyang.entrylib.Matcher.MatchLoader;
 import com.billyang.entrylib.Matcher.MatchValue;
+import com.billyang.entrylib.Subgroup.Subgroup;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -37,13 +38,13 @@ public class PackageLoader {
 
     /**
      * 从文件导入词条至目标群数据库
-     * @param groupId 目标群号
+     * @param name 目标群号/目标群分组
      * @param file 词条包文件
      * @param overwrite 是否复写相同词条（0表示不覆写，1表示合并，2表示覆写）
      * @param ErrorInfo 传递错误信息
      * @return 导入状态
      */
-    public boolean leadIn(long groupId, File file, int overwrite, StringBuilder ErrorInfo) {
+    public boolean leadIn(Object name, File file, int overwrite, StringBuilder ErrorInfo) {
         StringBuffer sb = UserIO.readFile(file);
         List<PackageValue> packageList;
 
@@ -55,24 +56,50 @@ public class PackageLoader {
             return false;
         }
 
+        long groupId = 0;
+        Subgroup subgroup = null;
+        boolean isGroup = false;
+
+        if(name instanceof Subgroup) {
+            isGroup = true;
+            subgroup = (Subgroup) name;
+        } else groupId = (Long) name;
+
         for(PackageValue pv: packageList) {
-            if(!db.connect(groupId)) {
-                ErrorInfo.append("无法连接至数据库！");
-                return false;
+            if(isGroup) {
+                if(!db.connect(subgroup)) {
+                    ErrorInfo.append("无法连接至数据库！");
+                    return false;
+                }
+            } else {
+                if(!db.connect(groupId)) {
+                    ErrorInfo.append("无法连接至数据库！");
+                    return false;
+                }
             }
 
             int id = db.find_id(pv.getTitle());
             if(id > 0) { //词条已存在
                 db.close();
-                if(overwrite == 1) {
-                    for(QueryValue qv: pv.getHistory())db.insert(groupId, pv.getTitle(), qv.getContent(), pv.getMode(), pv.getPriority(), ErrorInfo);
-                } else if(overwrite == 2) {
-                    db.delete(groupId, pv.getTitle(), ErrorInfo);
-                    for(QueryValue qv: pv.getHistory())db.insert(groupId, pv.getTitle(), qv.getContent(), pv.getMode(), pv.getPriority(), ErrorInfo);
+                if(isGroup) {
+                    if(overwrite == 1) {
+                        for(QueryValue qv: pv.getHistory())db.insert(subgroup, pv.getTitle(), qv.getContent(), pv.getMode(), pv.getPriority(), ErrorInfo);
+                    } else if(overwrite == 2) {
+                        db.delete(subgroup, pv.getTitle(), ErrorInfo);
+                        for(QueryValue qv: pv.getHistory())db.insert(subgroup, pv.getTitle(), qv.getContent(), pv.getMode(), pv.getPriority(), ErrorInfo);
+                    }
+                } else {
+                    if(overwrite == 1) {
+                        for(QueryValue qv: pv.getHistory())db.insert(groupId, pv.getTitle(), qv.getContent(), pv.getMode(), pv.getPriority(), ErrorInfo);
+                    } else if(overwrite == 2) {
+                        db.delete(groupId, pv.getTitle(), ErrorInfo);
+                        for(QueryValue qv: pv.getHistory())db.insert(groupId, pv.getTitle(), qv.getContent(), pv.getMode(), pv.getPriority(), ErrorInfo);
+                    }
                 }
             } else if(id == -3) {
                 db.close();
-                for(QueryValue qv: pv.getHistory())db.insert(groupId, pv.getTitle(), qv.getContent(), pv.getMode(), pv.getPriority(), ErrorInfo);
+                if(isGroup) for(QueryValue qv: pv.getHistory())db.insert(subgroup, pv.getTitle(), qv.getContent(), pv.getMode(), pv.getPriority(), ErrorInfo);
+                else for(QueryValue qv: pv.getHistory())db.insert(groupId, pv.getTitle(), qv.getContent(), pv.getMode(), pv.getPriority(), ErrorInfo);
             } else {
                 db.close();
                 ErrorInfo.append("导入 ").append(pv.getTitle()).append(" 词条时出错啦！");
@@ -86,17 +113,31 @@ public class PackageLoader {
     /**
      * 从群数据库导出词条库至目标文件
      * @param ml 提供匹配器
-     * @param groupId 目标群号
+     * @param name 目标群号/目标群分组
      * @param file 词条包文件
      * @param ErrorInfo 传递错误信息
      * @return 导出状态
      */
-    public boolean leadOut(MatchLoader ml, long groupId, File file, StringBuilder ErrorInfo) {
-        List<MatchValue> matchList = ml.all(groupId);
+    public boolean leadOut(MatchLoader ml, Object name, File file, StringBuilder ErrorInfo) {
+        long groupId = 0;
+        Subgroup subgroup = null;
+        boolean isGroup = false;
+
+        if(name instanceof Subgroup) {
+            isGroup = true;
+            subgroup = (Subgroup) name;
+        } else groupId = (Long) name;
+
+        List<MatchValue> matchList;
+        if(isGroup) matchList = ml.all(subgroup);
+        else matchList = ml.all(groupId);
+
         List<PackageValue> packageList = new ArrayList<>();
 
         for(MatchValue mv: matchList) {
-            List<QueryValue> history = db.history(groupId, mv.getId(), ErrorInfo);
+            List<QueryValue> history;
+            if(isGroup) history = db.history(subgroup, mv.getId(), ErrorInfo);
+            else history = db.history(groupId, mv.getId(), ErrorInfo);
 
             PackageValue pv = new PackageValue(mv.getTitle(), mv.getType(), mv.getPriority(), history);
 
