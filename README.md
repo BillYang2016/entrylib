@@ -172,7 +172,8 @@ EntryLib 是一个基于 [Mirai-Console](https://github.com/mamoe/mirai-console)
 8. 为什么偶尔会造成更新操作失败？是因为数据库正在执行其他工作，因此受到了并发性限制。该问题发生概率很低，一般重试一次即可解决。若数据库长时间被占用，会出现一直无法执行更新的现象，若发生需要请发送 [Issues](https://github.com/BillYang2016/entrylib/issues) 反馈
 
 # 配置项
-配置项位于`Mirai\data\EntryLib\`文件夹中
+配置项位于`Mirai\data\EntryLib\`文件夹中  
+也可能位于`Mirai\data\com.billyang.entrylib\`文件夹中（常见于MCL）
 
 ## `global.json`
 本配置项提供对插件全局的控制，包含以下项目：
