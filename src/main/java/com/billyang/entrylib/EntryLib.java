@@ -36,10 +36,11 @@ import java.util.regex.Pattern;
  */
 public final class EntryLib extends JavaPlugin {
     public static final EntryLib INSTANCE = new EntryLib();
+    public static final String AUDIOS_FOLDER = INSTANCE.getDataFolder().getAbsolutePath() + "/audios/";
     public static final String IMAGES_FOLDER = INSTANCE.getDataFolder().getAbsolutePath() + "/images/";
     public static final String DATABASES_FOLDER = INSTANCE.getDataFolder().getAbsolutePath() + "/databases/";
     private EntryLib() {
-        super(new JvmPluginDescriptionBuilder("EntryLib", "1.1.3")
+        super(new JvmPluginDescriptionBuilder("EntryLib", "1.2.0")
                 .id("com.billyang.entrylib")
                 .info("Ask and replay plugin for Mirai-Console")
                 .author("Bill Yang")

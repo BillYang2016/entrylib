@@ -1,6 +1,7 @@
 package com.billyang.entrylib.Database;
 
 import com.billyang.entrylib.EntryLib;
+import com.billyang.entrylib.MiraiCodeParser.AudioParser;
 import com.billyang.entrylib.MiraiCodeParser.ImageParser;
 
 import java.io.File;
@@ -11,25 +12,27 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * ImageCleaner 类
+ * FileCleaner 类
  * 多线程，继承自 Runnable 接口
- * 清理没有用过的图片
+ * 清理没有用过的图片与语音
  */
-class ImageCleaner implements Runnable {
+class FileCleaner implements Runnable {
 
     private Thread t;
 
     EntryLib entrylib;
-    private List<File> fileList;
+    private List<File> imageList, audioList;
 
     /**
      * 构造函数
      * @param entrylib 传递主类
-     * @param fileList 提供已存在列表
+     * @param imageList 提供图片已存在列表
+     * @param audioList 提供语音已存在列表
      */
-    ImageCleaner(EntryLib entrylib, List<File> fileList) {
+    FileCleaner(EntryLib entrylib, List<File> imageList, List<File> audioList) {
         this.entrylib = entrylib;
-        this.fileList = fileList;
+        this.imageList = imageList;
+        this.audioList = audioList;
     }
 
     /**
@@ -37,14 +40,21 @@ class ImageCleaner implements Runnable {
      */
     public void run() {
         File imageFolder = new File(EntryLib.IMAGES_FOLDER);
+        File audioFolder = new File(EntryLib.AUDIOS_FOLDER);
         if(imageFolder.exists()) {
             List<File> tempList = Arrays.asList(imageFolder.listFiles());
             List<File> imageFiles = new ArrayList(tempList);
-            HashSet<File> hs1 = new HashSet(fileList), hs2 = new HashSet(imageFiles);
+            tempList = Arrays.asList(audioFolder.listFiles());
+            List<File> audioFiles = new ArrayList(tempList);
+            HashSet<File> hs1 = new HashSet(imageList), hs2 = new HashSet(imageFiles), hs3 = new HashSet(audioList), hs4 = new HashSet(audioFiles);
 
             hs2.removeAll(hs1);
             imageFiles.clear();
             imageFiles.addAll(hs2); //得到需要删除的图片文件
+
+            hs4.remove(hs3);
+            audioFiles.clear();
+            audioFiles.addAll(hs4); //得到需要删除的语音文件
 
             for(File file: imageFiles) {
                 System.gc(); //需要先垃圾回收才能删除
@@ -56,7 +66,18 @@ class ImageCleaner implements Runnable {
                 }
             }
 
+            for(File file: audioFiles) {
+                System.gc(); //需要先垃圾回收才能删除
+                file.getAbsoluteFile().delete(); //删除语音
+                try {
+                    Thread.sleep(50);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+
             entrylib.getLogger().info("数据库整理器已清理未使用的图片缓存：总计" + imageFiles.size() + "个图片");
+            entrylib.getLogger().info("数据库整理器已清理未使用的图片缓存：总计" + audioFiles.size() + "个语音");
         }
     }
 
@@ -324,9 +345,38 @@ public class DatabaseAutoArranger extends TimerTask {
         return list;
     }
 
-    List<File> fileList;
+    /**
+     * 将字符串中的语音 Mirai 码提取出来
+     * @param text 字符串
+     * @return 语音文件列表
+     */
+    public List<File> Text2AudioFile(String text) {
+        List<File> list = new ArrayList<>();
 
-    void listImage(String fileName) {
+        Pattern pt = Pattern.compile(AudioParser.regex);
+        Matcher mt = pt.matcher(text);
+
+        int start, end = 0;
+
+        while(mt.find()) {
+            start = mt.start();
+            end = mt.end();
+
+            String audioName = AudioParser.MiraiCode2Name(text.substring(start, end));
+            File file = new File(EntryLib.AUDIOS_FOLDER, audioName);
+
+            if(file.exists())list.add(file);
+        }
+
+        return list;
+    }
+
+    List<File> imageList, audioList;
+
+    /**
+     * 将数据库中所有包含的图片与语音提取到列表 fileList 中
+     */
+    void listFile() {
         List<Integer> idList = new ArrayList<>(); //词条表编号列表
 
         try {
@@ -337,7 +387,8 @@ public class DatabaseAutoArranger extends TimerTask {
                 String title = rs.getString("TITLE");
 
                 idList.add(id);
-                fileList.addAll(Text2ImageFile(title)); //添加标题
+                imageList.addAll(Text2ImageFile(title)); //添加标题
+                audioList.addAll(Text2AudioFile(title));
             }
             rs.close();
         } catch( Exception e ) {
@@ -351,7 +402,8 @@ public class DatabaseAutoArranger extends TimerTask {
                 while(rs.next()) {
                     String content = rs.getString("CONTENT");
 
-                    fileList.addAll(Text2ImageFile(content)); //添加标题
+                    imageList.addAll(Text2ImageFile(content)); //添加内容
+                    audioList.addAll(Text2AudioFile(content));
                 }
                 rs.close();
             } catch( Exception e ) {
@@ -375,7 +427,8 @@ public class DatabaseAutoArranger extends TimerTask {
 
         entrylib.getLogger().info("数据库整理器开始执行整理任务");
 
-        fileList = new ArrayList<>();
+        imageList = new ArrayList<>();
+        audioList = new ArrayList<>();
 
         for(File dbFile: files) {
             if(dbFile.isDirectory()) continue;
@@ -392,13 +445,13 @@ public class DatabaseAutoArranger extends TimerTask {
 
             if(rearrange(fileName))entrylib.getLogger().info("数据库" + fileName + "整理完成");
 
-            listImage(fileName);
+            listFile();
 
             close();
         }
 
-        ImageCleaner imageCleaner = new ImageCleaner(entrylib, fileList);
-        imageCleaner.start();
+        FileCleaner fileCleaner = new FileCleaner(entrylib, imageList, audioList);
+        fileCleaner.start();
 
         entrylib.getLogger().info("数据库整理器已完成所有整理任务");
     }

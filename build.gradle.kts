@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "com.billyang"
-version = "1.1.3"
+version = "1.2.0"
 
 repositories {
     maven("https://maven.aliyun.com/repository/public")
