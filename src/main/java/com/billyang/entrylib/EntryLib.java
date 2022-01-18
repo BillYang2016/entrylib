@@ -40,7 +40,7 @@ public final class EntryLib extends JavaPlugin {
     public static final String IMAGES_FOLDER = INSTANCE.getDataFolder().getAbsolutePath() + "/images/";
     public static final String DATABASES_FOLDER = INSTANCE.getDataFolder().getAbsolutePath() + "/databases/";
     private EntryLib() {
-        super(new JvmPluginDescriptionBuilder("EntryLib", "1.2.0")
+        super(new JvmPluginDescriptionBuilder("EntryLib", "1.2.1")
                 .id("com.billyang.entrylib")
                 .info("Ask and replay plugin for Mirai-Console")
                 .author("Bill Yang")
@@ -459,6 +459,16 @@ public final class EntryLib extends JavaPlugin {
     }
 
     /**
+     * processHelp 对 help 类指令进行处理
+     * 输出对应帮助文本
+     * @param g 正在被处理的消息事件
+     * @param type 帮助类型
+     */
+    void processHelp(GroupMessageEvent g, String type) {
+        sendGroupMessage(g, "help", type);
+    }
+
+    /**
      * 获取 EntryLib 插件版本
      * @return 返回版本号
      */
@@ -524,6 +534,11 @@ public final class EntryLib extends JavaPlugin {
             if(command != null && command.equals("all")) { //搜索全部类命令
                 getLogger().info("Got Input Command: " + command);
                 processAll(g, 1);
+                return;
+            }
+            if(command != null && command.equals("help")) { //帮助类命令
+                getLogger().info("Got Input Command: " + command);
+                processHelp(g, "default");
                 return;
             }
 
@@ -643,6 +658,11 @@ public final class EntryLib extends JavaPlugin {
 
                 processDelete(g, splitedMsg[1]);
 
+            } else if(command.equals("help")) { //帮助类命令
+
+                String subCommand = uio.parse(splitedMsg[1]);
+                if(subCommand == null || subCommand.contains("switch") || subCommand.equals("help")) processHelp(g, "error");
+                else processHelp(g, subCommand);
             }
 
         });
