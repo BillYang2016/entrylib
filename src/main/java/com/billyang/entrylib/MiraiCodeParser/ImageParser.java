@@ -51,12 +51,15 @@ public class ImageParser {
     boolean downloadImage(Image img) {
         String imageId = img.getImageId();
 
+        File file = new File(path, imageId);
+        if(file.exists()) return true; //文件已存在，无需下载
+
         try {
             URL url = new URL(Image.queryUrl(img));
 
             URLConnection conn = url.openConnection();
             InputStream inStream = conn.getInputStream();
-            FileOutputStream fs = new FileOutputStream(new File(path, imageId));
+            FileOutputStream fs = new FileOutputStream(file);
 
             byte[] buffer = new byte[1204];
             int byteread;
