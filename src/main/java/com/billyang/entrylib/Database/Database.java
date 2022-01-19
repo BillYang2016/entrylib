@@ -96,7 +96,9 @@ public class Database {
                         "(ID         INT           PRIMARY KEY NOT NULL," +   //编号
                         " TITLE      nvarchar(100) NOT NULL," +               //词条名
                         " MATCH_MODE INT           NOT NULL DEFAULT 0," +     //匹配模式
-                        " PRIORITY   INT           NOT NULL DEFAULT 2000)"    //优先级
+                        " PRIORITY   INT           NOT NULL DEFAULT 2000," +  //优先级
+                        " ALIAS      nvarchar(100) DEFAULT NULL," +           //别名
+                        " RANDOM     BOOLEAN       DEFAULT 0)"                 //优先级
                         ;
                 stmt.executeUpdate(sql);
 
@@ -169,7 +171,6 @@ public class Database {
 
     /**
      * 在主表中查询词条名所对应的词条ID
-     * 确保 title 已经过单引号转义
      * 返回负数表示异常
      * @param title 词条名
      * @return 词条ID，-1表示未连接数据库，-2表示异常，-3表示未找到
@@ -178,6 +179,7 @@ public class Database {
         if(c == null && stmt == null) return -1;
 
         try {
+            title = title.replace("'","''"); //单引号转义
             String sql = "SELECT * FROM __MAIN_TABLE WHERE TITLE='" + title + "';";
             ResultSet rs = stmt.executeQuery(sql);
             if(rs.next()) {
@@ -198,16 +200,18 @@ public class Database {
      * @param title 词条名
      * @param type 匹配方式
      * @param priority 优先级
+     * @param alias 别名
+     * @param random 是否随机回复
      * @return 创建状态
      */
-    boolean create_map(String title, int type, int priority) {
+    boolean create_map(String title, int type, int priority, String alias, boolean random) {
         if(c == null && stmt == null) return false;
 
         try {
             int id = max_id("__MAIN_TABLE") + 1;
 
-            String sql = "INSERT INTO __MAIN_TABLE (ID,TITLE,MATCH_MODE,PRIORITY) " +
-                         "VALUES (" + id + ",'" + title + "'," + type + "," + priority + ");";
+            String sql = "INSERT INTO __MAIN_TABLE (ID,TITLE,MATCH_MODE,PRIORITY,ALIAS,RANDOM) " +
+                         "VALUES (" + id + ",'" + title + "'," + type + "," + priority + "," + alias + "," + (random?1:0) + ");";
             stmt.executeUpdate(sql); //主表添加索引
 
             sql = "CREATE TABLE TABLE_" + id +
@@ -246,6 +250,119 @@ public class Database {
     }
 
     /**
+     * 查询 id 号词条表的别名
+     * 异常默认返回null 无别名同样返回null
+     * @param id 词条ID
+     * @return 别名
+     */
+    public String getAlias(int id) {
+        if(c == null && stmt == null) return null;
+
+        String sql = "SELECT ALIAS FROM __MAIN_TABLE WHERE ID=" + id + ";";
+        try {
+            ResultSet rs = stmt.executeQuery(sql);
+            if(rs.next())return rs.getString("ALIAS");
+            else return null;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    /**
+     * 修改词条别名
+     * 保证已连接数据库
+     * 返回错误信息
+     * @param id 词条ID
+     * @param alias 别名
+     * @param ErrorInfo 传递错误信息
+     * @return 别名设置状态
+     */
+    public boolean setAlias(int id, String alias, StringBuilder ErrorInfo) {
+        if(c == null && stmt == null) {
+            ErrorInfo.append("数据库未连接！");
+            close();
+            return false;
+        }
+
+        String sql;
+
+        if(alias == null) sql = "UPDATE __MAIN_TABLE SET ALIAS = NULL WHERE ID = " + id + ";";
+        else {
+            alias = alias.replace("'","''"); //单引号转义
+            sql = "UPDATE __MAIN_TABLE SET ALIAS = '" + alias + "' WHERE ID = " + id + ";";
+        }
+
+        try {
+            stmt.executeUpdate(sql);
+        } catch (SQLException e) {
+            ErrorInfo.append("无法修改主表！");
+            e.printStackTrace();
+            close();
+            return false;
+        }
+
+        close();
+        return true;
+    }
+
+    /**
+     * 连接群数据库，修改词条别名
+     * 返回错误信息
+     * @param groupId 群号
+     * @param title 词条名
+     * @param alias 别名
+     * @param ErrorInfo 传递错误信息
+     * @return 别名设置状态
+     */
+    public boolean setAlias(long groupId, String title, String alias, StringBuilder ErrorInfo) {
+        if(!connect(groupId)) {
+            ErrorInfo.append("数据库连接失败！");
+            return false;
+        }
+
+        return setAlias(find_id(title), alias, ErrorInfo);
+    }
+
+    /**
+     * 连接群分组数据库，修改词条别名
+     * 返回错误信息
+     * @param subgroup 群分组
+     * @param title 词条名
+     * @param alias 别名
+     * @param ErrorInfo 传递错误信息
+     * @return 别名设置状态
+     */
+    public boolean setAlias(Subgroup subgroup, String title, String alias, StringBuilder ErrorInfo) {
+        if(!connect(subgroup)) {
+            ErrorInfo.append("数据库连接失败！");
+            return false;
+        }
+
+        return setAlias(find_id(title), alias, ErrorInfo);
+    }
+
+    /**
+     * 查询 id 号词条表的随机回复选项
+     * 异常默认返回false 返回true表示回复随机版本 返回false表示回复最新版本
+     * @param id 词条ID
+     * @return 随机回复选项
+     */
+    public boolean getRandom(int id) {
+        if(c == null && stmt == null) return false;
+
+        String sql = "SELECT RANDOM FROM __MAIN_TABLE WHERE ID=" + id + ";";
+        try {
+            ResultSet rs = stmt.executeQuery(sql);
+            if(rs.next())return rs.getBoolean("RANDOM");
+            else return false;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
      * 向词条插入新内容
      * 保证已连接数据库
      * 返回错误信息
@@ -256,15 +373,15 @@ public class Database {
      * @param ErrorInfo 传递错误信息
      * @return 插入状态
      */
-    public boolean insert(String title, String content, int type, int priority, StringBuilder ErrorInfo) {
+    public boolean insert(String title, String content, int type, int priority, boolean random, StringBuilder ErrorInfo) {
         if(c == null && stmt == null) return false;
+
+        int id = find_id(title);
 
         title = title.replace("'","''"); //单引号转义
         content = content.replace("'","''"); //单引号转义
-
-        int id = find_id(title);
         if(id == -3)
-            if(!create_map(title, type, priority)) {
+            if(!create_map(title, type, priority, null, random)) {
                 close();
                 ErrorInfo.append("无法创建新表！");
                 return false;
@@ -274,7 +391,7 @@ public class Database {
             ErrorInfo.append("数据库查询异常！");
             return false;
         } else {
-            String sql = "UPDATE __MAIN_TABLE SET MATCH_MODE = " + type + ", PRIORITY = " + priority + " WHERE ID = " + id + ";"; //修改匹配方式与优先级
+            String sql = "UPDATE __MAIN_TABLE SET MATCH_MODE = " + type + ", PRIORITY = " + priority + ", RANDOM = " + (random?1:0) + " WHERE ID = " + id + ";"; //修改匹配方式与优先级
             try {
                 stmt.executeUpdate(sql);
             } catch (SQLException e) {
@@ -312,16 +429,17 @@ public class Database {
      * @param content 新内容
      * @param type 匹配方式
      * @param priority 优先级
+     * @param random 是否随机回复
      * @param ErrorInfo 传递错误信息
      * @return 插入状态
      */
-    public boolean insert(long groupId, String title, String content, int type, int priority, StringBuilder ErrorInfo) {
+    public boolean insert(long groupId, String title, String content, int type, int priority, boolean random, StringBuilder ErrorInfo) {
         if(!connect(groupId)) {
             ErrorInfo.append("数据库连接失败！");
             return false;
         }
 
-        return insert(title, content, type, priority, ErrorInfo);
+        return insert(title, content, type, priority, random, ErrorInfo);
     }
 
     /**
@@ -336,13 +454,50 @@ public class Database {
      * @return 插入状态
      * @see Subgroup
      */
-    public boolean insert(Subgroup subgroup, String title, String content, int type, int priority, StringBuilder ErrorInfo) {
+    public boolean insert(Subgroup subgroup, String title, String content, int type, int priority, boolean random, StringBuilder ErrorInfo) {
         if(!connect(subgroup)) {
             ErrorInfo.append("数据库连接失败！");
             return false;
         }
 
-        return insert(title, content, type, priority, ErrorInfo);
+        return insert(title, content, type, priority, random, ErrorInfo);
+    }
+
+    /**
+     * 删除词条
+     * 保证已连接数据库
+     * 返回错误信息
+     * @param id 词条ID
+     * @param ErrorInfo 传递错误信息
+     * @return 删除状态
+     */
+    public boolean delete(int id, StringBuilder ErrorInfo) {
+        if(c == null && stmt == null) return false;
+
+        try {
+            String sql = "DELETE FROM __MAIN_TABLE WHERE ID = " + id + ";";
+            stmt.executeUpdate(sql);
+        } catch( Exception e ) {
+            ErrorInfo.append("无法删除主表行！");
+            e.printStackTrace();
+            close();
+            return false;
+        }
+
+        String table = "TABLE_" + id;
+
+        try {
+            String sql = "DROP TABLE " + table + ";";
+            stmt.executeUpdate(sql);
+        } catch( Exception e ) {
+            ErrorInfo.append("无法删除").append(table).append("词条表！");
+            e.printStackTrace();
+            close();
+            return false;
+        }
+
+        close();
+        return true;
     }
 
     /**
@@ -369,30 +524,7 @@ public class Database {
             return false;
         }
 
-        try {
-            String sql = "DELETE FROM __MAIN_TABLE WHERE ID = " + id + ";";
-            stmt.executeUpdate(sql);
-        } catch( Exception e ) {
-            ErrorInfo.append("无法删除主表行！");
-            e.printStackTrace();
-            close();
-            return false;
-        }
-
-        String table = "TABLE_" + id;
-
-        try {
-            String sql = "DROP TABLE " + table + ";";
-            stmt.executeUpdate(sql);
-        } catch( Exception e ) {
-            ErrorInfo.append("无法删除").append(table).append("词条表！");
-            e.printStackTrace();
-            close();
-            return false;
-        }
-
-        close();
-        return true;
+        return delete(id, ErrorInfo);
     }
 
     /**
@@ -579,5 +711,80 @@ public class Database {
         }
 
         return history(id, ErrorInfo);
+    }
+
+    /**
+     * 删除词条表的最新记录
+     * @param id 词条ID
+     * @param ErrorInfo 传递错误信息
+     * @return 返回删除状态
+     */
+    public boolean deleteNewest(int id, StringBuilder ErrorInfo) {
+        if(c == null && stmt == null) return false;
+
+        String table = "TABLE_" + id;
+        int tableId = max_id(table);
+
+        if(tableId == 1) return delete(id, ErrorInfo); //仅有一条记录，删除整个表
+        else {
+            try {
+                String sql = "DELETE FROM " + table + " WHERE ID = " + tableId + ";"; //删除最新记录
+                stmt.executeUpdate(sql);
+            } catch( Exception e ) {
+                ErrorInfo.append("无法删除最新记录！");
+                e.printStackTrace();
+                close();
+                return false;
+            }
+        }
+
+        close();
+        return true;
+    }
+
+    /**
+     * 连接群数据库，删除词条别名
+     * @param groupId 群号
+     * @param id 词条ID
+     * @param ErrorInfo 传递错误信息
+     * @return 返回删除状态
+     */
+    public boolean deleteAlias(long groupId, int id, StringBuilder ErrorInfo) {
+        if(!connect(groupId)) {
+            ErrorInfo.append("数据库连接失败！");
+            return false;
+        }
+
+        if(!setAlias(id, null, ErrorInfo)) return false;
+
+        if(!connect(groupId)) {
+            ErrorInfo.append("数据库连接失败！");
+            return false;
+        }
+
+        return deleteNewest(id, ErrorInfo);
+    }
+
+    /**
+     * 连接群分组数据库，删除词条别名
+     * @param subgroup 群分组
+     * @param id 词条ID
+     * @param ErrorInfo 传递错误信息
+     * @return 返回删除状态
+     */
+    public boolean deleteAlias(Subgroup subgroup, int id, StringBuilder ErrorInfo) {
+        if(!connect(subgroup)) {
+            ErrorInfo.append("数据库连接失败！");
+            return false;
+        }
+
+        if(!setAlias(id, null, ErrorInfo)) return false;
+
+        if(!connect(subgroup)) {
+            ErrorInfo.append("数据库连接失败！");
+            return false;
+        }
+
+        return deleteNewest(id, ErrorInfo);
     }
 }

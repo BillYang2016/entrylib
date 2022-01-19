@@ -168,18 +168,62 @@ public class DatabaseAutoArranger extends TimerTask {
      * @return 整理状态
      */
     boolean rearrange(String fileName) {
-        List<Integer> list = new ArrayList<>(); //获取词条id列表
+        List<Integer> list = new ArrayList<>(), deleteIdList = new ArrayList<>(); //获取词条id列表
+        List<String> titleList = new ArrayList<>(); //获取词条标题列表
 
         try {
-            String sql = "SELECT * FROM __MAIN_TABLE;";
+            String sql = "SELECT * FROM __MAIN_TABLE WHERE ALIAS IS NULL;"; //无别名
             ResultSet rs = stmt.executeQuery(sql);
             while(rs.next()) {
                 int id = rs.getInt("ID");
+                String title = rs.getString("TITLE");
                 list.add(id);
+                titleList.add(title);
             }
             rs.close();
         } catch( Exception e ) {
             e.printStackTrace();
+        }
+
+        try {
+            String sql = "SELECT * FROM __MAIN_TABLE WHERE ALIAS IS NOT NULL;"; //别名项
+            ResultSet rs = stmt.executeQuery(sql);
+            while(rs.next()) {
+                int id = rs.getInt("ID");
+                String alias = rs.getString("ALIAS");
+                if(titleList.contains(alias)) list.add(id); //目标存在，加入list进行整理
+                else deleteIdList.add(id); //目标不存在，删除本项
+            }
+            rs.close();
+        } catch( Exception e ) {
+            e.printStackTrace();
+        }
+
+        for(int id: deleteIdList) {
+            String sql = "DELETE FROM __MAIN_TABLE WHERE ID = " + id + ";";
+
+            boolean success = false;
+            for(int i = 1; i <= 5; i ++) {
+                try {
+                    stmt.executeUpdate(sql); //删除失效别名
+                    success = true;
+                    break;
+                } catch( Exception e ) {
+                    entrylib.getLogger().error("无法删除失效别名" + id + "，五秒后重试！（" + i + "/5）");
+                    e.printStackTrace();
+
+                    try {
+                        TimeUnit.SECONDS.sleep(5);
+                    } catch (InterruptedException interruptedException) {
+                        interruptedException.printStackTrace();
+                    }
+                }
+            }
+
+            if(!success) {
+                entrylib.getLogger().error("无法完成" + fileName + "数据库整理工作，即将退出！");
+                return false;
+            }
         }
 
         Collections.sort(list);

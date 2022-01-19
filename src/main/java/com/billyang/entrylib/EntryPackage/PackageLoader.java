@@ -83,23 +83,32 @@ public class PackageLoader {
                 db.close();
                 if(isGroup) {
                     if(overwrite == 1) {
-                        for(QueryValue qv: pv.getHistory())db.insert(subgroup, pv.getTitle(), qv.getContent(), pv.getMode(), pv.getPriority(), ErrorInfo);
+                        for(QueryValue qv: pv.getHistory())db.insert(subgroup, pv.getTitle(), qv.getContent(), pv.getMode(), pv.getPriority(), pv.getRandom(), ErrorInfo);
+                        db.setAlias(subgroup, pv.getTitle(), pv.getAlias(), ErrorInfo);
                     } else if(overwrite == 2) {
                         db.delete(subgroup, pv.getTitle(), ErrorInfo);
-                        for(QueryValue qv: pv.getHistory())db.insert(subgroup, pv.getTitle(), qv.getContent(), pv.getMode(), pv.getPriority(), ErrorInfo);
+                        for(QueryValue qv: pv.getHistory())db.insert(subgroup, pv.getTitle(), qv.getContent(), pv.getMode(), pv.getPriority(), pv.getRandom(), ErrorInfo);
+                        db.setAlias(subgroup, pv.getTitle(), pv.getAlias(), ErrorInfo);
                     }
                 } else {
                     if(overwrite == 1) {
-                        for(QueryValue qv: pv.getHistory())db.insert(groupId, pv.getTitle(), qv.getContent(), pv.getMode(), pv.getPriority(), ErrorInfo);
+                        for(QueryValue qv: pv.getHistory())db.insert(groupId, pv.getTitle(), qv.getContent(), pv.getMode(), pv.getPriority(), pv.getRandom(), ErrorInfo);
+                        db.setAlias(groupId, pv.getTitle(), pv.getAlias(), ErrorInfo);
                     } else if(overwrite == 2) {
                         db.delete(groupId, pv.getTitle(), ErrorInfo);
-                        for(QueryValue qv: pv.getHistory())db.insert(groupId, pv.getTitle(), qv.getContent(), pv.getMode(), pv.getPriority(), ErrorInfo);
+                        for(QueryValue qv: pv.getHistory())db.insert(groupId, pv.getTitle(), qv.getContent(), pv.getMode(), pv.getPriority(), pv.getRandom(), ErrorInfo);
+                        db.setAlias(groupId, pv.getTitle(), pv.getAlias(), ErrorInfo);
                     }
                 }
             } else if(id == -3) {
                 db.close();
-                if(isGroup) for(QueryValue qv: pv.getHistory())db.insert(subgroup, pv.getTitle(), qv.getContent(), pv.getMode(), pv.getPriority(), ErrorInfo);
-                else for(QueryValue qv: pv.getHistory())db.insert(groupId, pv.getTitle(), qv.getContent(), pv.getMode(), pv.getPriority(), ErrorInfo);
+                if(isGroup) {
+                    for(QueryValue qv: pv.getHistory())db.insert(subgroup, pv.getTitle(), qv.getContent(), pv.getMode(), pv.getPriority(), pv.getRandom(), ErrorInfo);
+                    db.setAlias(subgroup, pv.getTitle(), pv.getAlias(), ErrorInfo);
+                } else {
+                    for(QueryValue qv: pv.getHistory())db.insert(groupId, pv.getTitle(), qv.getContent(), pv.getMode(), pv.getPriority(), pv.getRandom(), ErrorInfo);
+                    db.setAlias(groupId, pv.getTitle(), pv.getAlias(), ErrorInfo);
+                }
             } else {
                 db.close();
                 ErrorInfo.append("导入 ").append(pv.getTitle()).append(" 词条时出错啦！");
@@ -139,7 +148,7 @@ public class PackageLoader {
             if(isGroup) history = db.history(subgroup, mv.getId(), ErrorInfo);
             else history = db.history(groupId, mv.getId(), ErrorInfo);
 
-            PackageValue pv = new PackageValue(mv.getTitle(), mv.getType(), mv.getPriority(), history);
+            PackageValue pv = new PackageValue(mv.getTitle(), mv.getType(), mv.getPriority(), db.getAlias(mv.getId()), db.getRandom(mv.getId()), history);
 
             packageList.add(pv);
         }

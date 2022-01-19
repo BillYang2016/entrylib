@@ -40,7 +40,7 @@ public final class EntryLib extends JavaPlugin {
     public static final String IMAGES_FOLDER = INSTANCE.getDataFolder().getAbsolutePath() + "/images/";
     public static final String DATABASES_FOLDER = INSTANCE.getDataFolder().getAbsolutePath() + "/databases/";
     private EntryLib() {
-        super(new JvmPluginDescriptionBuilder("EntryLib", "1.2.0")
+        super(new JvmPluginDescriptionBuilder("EntryLib", "1.3.0")
                 .id("com.billyang.entrylib")
                 .info("Ask and replay plugin for Mirai-Console")
                 .author("Bill Yang")
@@ -84,9 +84,9 @@ public final class EntryLib extends JavaPlugin {
      * @param content 新词条内容
      * @param type 匹配方式
      * @see #sendGroupMessage(GroupMessageEvent, String, String, String...) 
-     * @see Database#insert(long, String, String, int, int, StringBuilder)
+     * @see Database#insert(String, String, int, int, boolean, StringBuilder) 
      */
-    void processLearn(GroupMessageEvent g, String title, String content, int type, int priority) {
+    void processLearn(GroupMessageEvent g, String title, String content, int type, int priority, boolean random) {
         if(!Security.checkTitle(uio, title)) {
             sendGroupMessage(g,"learn", "reject", title);
             return;
@@ -103,8 +103,20 @@ public final class EntryLib extends JavaPlugin {
         Database db = new Database(); //新建数据库对象
 
         Subgroup subgroup = sgl.get(g.getGroup().getId());
-        if(subgroup == null) status = db.insert(g.getGroup().getId(), title, content, type, priority, ErrorInfo); //向数据库插入
-        else status = db.insert(subgroup, title, content, type, priority, ErrorInfo);
+
+        if(subgroup == null)db.connect(g.getGroup().getId());
+        else db.connect(subgroup);
+
+        int id = db.find_id(title);
+        if(id > 0 && db.getAlias(id) != null) {
+            sendGroupMessage(g,"learn", "alias", title);
+            return;
+        }
+
+        db.close();
+
+        if(subgroup == null) status = db.insert(g.getGroup().getId(), title, content, type, priority, random, ErrorInfo); //向数据库插入
+        else status = db.insert(subgroup, title, content, type, priority, random, ErrorInfo);
 
         if(status) sendGroupMessage(g,"learn", "done", title);
         else {
@@ -155,8 +167,26 @@ public final class EntryLib extends JavaPlugin {
 
             Database db = new Database(); //新建数据库对象
 
-            if(subgroup == null) content = db.query(g.getGroup().getId(), id, uio.getRandomReply(), ErrorInfo);
-            else content = db.query(subgroup, id, uio.getRandomReply(), ErrorInfo);
+            if(subgroup == null)db.connect(g.getGroup().getId());
+            else db.connect(subgroup);
+
+            String alias = db.getAlias(id);
+
+            if(alias != null) { //别名存在
+                int target = db.find_id(alias); //别名目标
+                if(target < 0) {
+                    sendGroupMessage(g,"alias", "error", title);
+                    db.close();
+                    return;
+                }
+                id = target; //替换目标
+            }
+
+            boolean random = db.getRandom(id);
+            db.close();
+
+            if(subgroup == null) content = db.query(g.getGroup().getId(), id, random, ErrorInfo);
+            else content = db.query(subgroup, id, random, ErrorInfo);
 
             if(content == null) {
                 if(!cancelError) {
@@ -458,6 +488,76 @@ public final class EntryLib extends JavaPlugin {
         } else sendGroupMessage(g,"delete", "done", title);
     }
 
+    void processAlias(GroupMessageEvent g, String title, String target, int type, int priority) {
+        if(uio.getDeletePermission() && g.getSender().getPermission() == MemberPermission.MEMBER && !al.isAdmin(g.getSender().getId())) { //权限判断
+            sendGroupMessage(g,"delete", "permission");
+            return;
+        }
+
+        Database db = new Database(); //新建数据库对象
+
+        StringBuilder ErrorInfo = new StringBuilder(); //错误信息
+        boolean status;
+        Subgroup subgroup = sgl.get(g.getGroup().getId());
+
+        if(subgroup == null)db.connect(g.getGroup().getId());
+        else db.connect(subgroup);
+
+        if(target == null) { //删除别名
+            int id = db.find_id(title);
+            if(id < 0) { //标题不存在
+                sendGroupMessage(g,"alias", "exist", title);
+                db.close();
+                return;
+            }
+            target = db.getAlias(id);
+            if(target == null) { //别名目标不存在
+                sendGroupMessage(g,"alias", "exist", title);
+                db.close();
+                return;
+            }
+
+            db.close();
+
+            if(subgroup == null) status = db.deleteAlias(g.getGroup().getId(), id, ErrorInfo);
+            else status = db.deleteAlias(subgroup, id, ErrorInfo);
+
+            if(status) sendGroupMessage(g, "alias", "deleted", title, target);
+            else {
+                sendGroupMessage(g,"alias","fail", title);
+                getLogger().warning(String.valueOf(ErrorInfo));
+            }
+            return;
+        }
+
+        int targetId = db.find_id(target);
+        if(targetId < 0) {
+            sendGroupMessage(g,"alias", "error", title);
+            db.close();
+            return;
+        }
+        if(title.equals(target) || db.getAlias(targetId) != null) { //别名设置给了自己 或 目标存在别名
+            sendGroupMessage(g,"alias", "reject", title);
+            db.close();
+            return;
+        }
+
+        db.close();
+
+        if(subgroup == null) {
+            db.insert(g.getGroup().getId(), title, "alias to " + target, type, priority, false, ErrorInfo); //添加一个词条
+            status = db.setAlias(g.getGroup().getId(), title, target, ErrorInfo); //设置别名
+        } else {
+            db.insert(subgroup, title, "alias to " + target, type, priority, false, ErrorInfo); //添加一个词条
+            status = db.setAlias(subgroup, title, target, ErrorInfo); //设置别名
+        }
+
+        if(!status) {
+            sendGroupMessage(g, "alias", "fail", title);
+            getLogger().warning(String.valueOf(ErrorInfo));
+        } else sendGroupMessage(g,"alias", "done", title, target);
+    }
+
     /**
      * 获取 EntryLib 插件版本
      * @return 返回版本号
@@ -479,8 +579,8 @@ public final class EntryLib extends JavaPlugin {
 
         StringBuilder ErrorInfo = new StringBuilder();
 
-        new DatabaseUpdater(this).update(); //升级数据库
         uio.init(this, DataFolderPath); //初始化用户交互
+        new DatabaseUpdater(this).update(); //升级数据库
         eg.init(DataFolderPath, uio); //初始化群开关
         al.init(DataFolderPath); //初始化管理员
         cp = new CodeParser(DataFolderPath, uio); //初始化转义器
@@ -590,7 +690,14 @@ public final class EntryLib extends JavaPlugin {
                     if(priority > 5000) priority = 5000;
                 }
 
-                processLearn(g, title, content, type, priority);
+                boolean random = uio.getRandomReply();
+
+                if(splitedMsg.length > 5) {
+                    if(splitedMsg[5].contains("随机")) random = true;
+                    else if(splitedMsg[5].contains("最新")) random = false;
+                }
+
+                processLearn(g, title, content, type, priority, random);
 
             } else if(command.equals("view")) { //查看类命令
 
@@ -642,6 +749,38 @@ public final class EntryLib extends JavaPlugin {
             } else if(command.equals("delete")) { //删除类命令
 
                 processDelete(g, splitedMsg[1]);
+
+            } else if(command.equals("alias")) { //别名类命令
+
+                if(splitedMsg.length < 2) return; //命令格式错误
+
+                String alias;
+
+                if(splitedMsg.length == 2) alias = null;
+                else alias = splitedMsg[2];
+
+                int type = 0; //匹配方式
+
+                if(splitedMsg.length > 3) {
+                    String sType = splitedMsg[3];
+
+                    if(sType.contains("精准")) type = 0;
+                    else if(sType.contains("模糊")) type = 1;
+                    else if(sType.contains("正则")) type = 2;
+                }
+
+                int priority = 2000; //优先级
+
+                if(splitedMsg.length > 4) {
+                    String sPriority = splitedMsg[4];
+                    String regex="[^0-9]";
+                    Pattern p = Pattern.compile(regex);
+                    Matcher m = p.matcher(sPriority);
+                    priority = Integer.parseInt(m.replaceAll("").trim());
+                    if(priority > 5000) priority = 5000;
+                }
+
+                processAlias(g, splitedMsg[1], alias, type, priority);
 
             }
 
