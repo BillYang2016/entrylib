@@ -103,20 +103,14 @@ public final class EntryLib extends JavaPlugin {
         Database db = new Database(); //新建数据库对象
 
         Subgroup subgroup = sgl.get(g.getGroup().getId());
+        Object name = ( subgroup == null ) ? g.getGroup().getId() : subgroup;
 
-        if(subgroup == null)db.connect(g.getGroup().getId());
-        else db.connect(subgroup);
-
-        int id = db.find_id(title);
-        if(id > 0 && db.getAlias(id) != null) {
+        if(db.getAlias(name, title) != null) { //判断是否已有别名
             sendGroupMessage(g,"learn", "alias", title);
             return;
         }
 
-        db.close();
-
-        if(subgroup == null) status = db.insert(g.getGroup().getId(), title, content, type, priority, random, ErrorInfo); //向数据库插入
-        else status = db.insert(subgroup, title, content, type, priority, random, ErrorInfo);
+        status = db.insert(name, title, content, type, priority, random, ErrorInfo); //向数据库插入
 
         if(status) sendGroupMessage(g,"learn", "done", title);
         else {
@@ -135,8 +129,8 @@ public final class EntryLib extends JavaPlugin {
      * @param title 查询词条名
      * @param cancelError 是否取消错误反馈
      * @see #sendGroupMessage(GroupMessageEvent, String, String, String...)
-     * @see MatchLoader#match(long, String) 
-     * @see Database#query(long, int, boolean, StringBuilder)
+     * @see MatchLoader#match(Object, String)
+     * @see Database#query(Object, int, boolean, StringBuilder)
      */
     void processView(GroupMessageEvent g, String title, boolean cancelError) {
         if(!Security.checkTitle(uio, title)) {
@@ -150,11 +144,11 @@ public final class EntryLib extends JavaPlugin {
         }
 
         MatchLoader ml = new MatchLoader(); //新建匹配器对象
-        MatchValue mv;
 
         Subgroup subgroup = sgl.get(g.getGroup().getId());
-        if(subgroup == null) mv = ml.match(g.getGroup().getId(), title);
-        else mv = ml.match(subgroup, title);
+        Object name = ( subgroup == null ) ? g.getGroup().getId() : subgroup;
+
+        MatchValue mv = ml.match(name, title);
 
         int id = mv.getId(); //获取匹配到的词条id
         int type = mv.getType(); //获取匹配到的匹配方式
@@ -163,30 +157,22 @@ public final class EntryLib extends JavaPlugin {
             if(!cancelError) sendGroupMessage(g,"view", "exist", title);
         } else {
             StringBuilder ErrorInfo = new StringBuilder(); //错误信息
-            String content;
 
             Database db = new Database(); //新建数据库对象
 
-            if(subgroup == null)db.connect(g.getGroup().getId());
-            else db.connect(subgroup);
-
-            String alias = db.getAlias(id);
+            String alias = db.getAlias(name, id);
 
             if(alias != null) { //别名存在
-                int target = db.find_id(alias); //别名目标
+                int target = db.find_id(name, alias); //别名目标
                 if(target < 0) {
                     sendGroupMessage(g,"alias", "error", title);
-                    db.close();
                     return;
                 }
                 id = target; //替换目标
             }
 
-            boolean random = db.getRandom(id);
-            db.close();
-
-            if(subgroup == null) content = db.query(g.getGroup().getId(), id, random, ErrorInfo);
-            else content = db.query(subgroup, id, random, ErrorInfo);
+            boolean random = db.getRandom(name, id);
+            String content = db.query(name, id, random, ErrorInfo);
 
             if(content == null) {
                 if(!cancelError) {
@@ -220,8 +206,8 @@ public final class EntryLib extends JavaPlugin {
      * @param title 查询词条名
      * @param page 查询的页数/页码
      * @see #sendGroupMessage(GroupMessageEvent, String, String, String...)
-     * @see MatchLoader#match(long, String)
-     * @see Database#history(long, int, StringBuilder)
+     * @see MatchLoader#match(Object, String)
+     * @see Database#history(Object, int, StringBuilder)
      */
     void processHistory(GroupMessageEvent g, String title, int page) {
         if(!Security.checkTitle(uio, title)) {
@@ -235,11 +221,11 @@ public final class EntryLib extends JavaPlugin {
         }
 
         MatchLoader ml = new MatchLoader(); //新建匹配器对象
-        MatchValue mv;
 
         Subgroup subgroup = sgl.get(g.getGroup().getId());
-        if(subgroup == null) mv = ml.match(g.getGroup().getId(), title);
-        else mv = ml.match(subgroup, title);
+        Object name = ( subgroup == null ) ? g.getGroup().getId() : subgroup;
+
+        MatchValue mv = ml.match(name, title);
 
         int id = mv.getId(); //获取匹配到的词条id
         int type = mv.getType(); //获取匹配到的匹配方式
@@ -248,12 +234,10 @@ public final class EntryLib extends JavaPlugin {
             sendGroupMessage(g,"history", "exist", title);
         } else {
             StringBuilder ErrorInfo = new StringBuilder(); //错误信息
-            List<QueryValue> contentList;
 
             Database db = new Database(); //新建数据库对象
 
-            if(subgroup == null) contentList = db.history(g.getGroup().getId(), id, ErrorInfo); //获取列表
-            else contentList = db.history(subgroup, id, ErrorInfo);
+            List<QueryValue> contentList = db.history(name, id, ErrorInfo); //获取列表
 
             if(contentList == null) {
                 sendGroupMessage(g,"history", "error", title);
@@ -322,7 +306,7 @@ public final class EntryLib extends JavaPlugin {
      * @param keyword 查询的关键词
      * @param page 查询的页数/页码
      * @see #sendGroupMessage(GroupMessageEvent, String, String, String...)
-     * @see MatchLoader#search(long, String)
+     * @see MatchLoader#search(Object, String)
      */
     void processSearch(GroupMessageEvent g, String keyword, int page) {
         if(uio.getSearchPermission() && g.getSender().getPermission() == MemberPermission.MEMBER && !al.isAdmin(g.getSender().getId())) { //权限判断
@@ -332,11 +316,10 @@ public final class EntryLib extends JavaPlugin {
 
         MatchLoader ml = new MatchLoader(); //新建匹配器对象
 
-        List<MatchValue> list;
-
         Subgroup subgroup = sgl.get(g.getGroup().getId());
-        if(subgroup == null) list = ml.search(g.getGroup().getId(), keyword);
-        else list = ml.search(subgroup, keyword);
+        Object name = ( subgroup == null ) ? g.getGroup().getId() : subgroup;
+
+        List<MatchValue> list = ml.search(name, keyword);
 
         StringBuilder reply = new StringBuilder();
 
@@ -391,7 +374,7 @@ public final class EntryLib extends JavaPlugin {
      * @param g 正在被处理的消息事件
      * @param page 查询的页数/页码
      * @see #sendGroupMessage(GroupMessageEvent, String, String, String...)
-     * @see MatchLoader#all(long)
+     * @see MatchLoader#all(Object)
      */
     void processAll(GroupMessageEvent g, int page) {
         if(uio.getAllPermission() && g.getSender().getPermission() == MemberPermission.MEMBER && !al.isAdmin(g.getSender().getId())) { //权限判断
@@ -401,11 +384,10 @@ public final class EntryLib extends JavaPlugin {
 
         MatchLoader ml = new MatchLoader(); //新建匹配器对象
 
-        List<MatchValue> list;
-
         Subgroup subgroup = sgl.get(g.getGroup().getId());
-        if(subgroup == null) list = ml.all(g.getGroup().getId());
-        else list = ml.all(subgroup);
+        Object name = ( subgroup == null ) ? g.getGroup().getId() : subgroup;
+
+        List<MatchValue> list = ml.all(name);
 
         StringBuilder reply = new StringBuilder();
 
@@ -459,7 +441,7 @@ public final class EntryLib extends JavaPlugin {
      * @param g 正在被处理的消息事件
      * @param title 即将被删除的词条名
      * @see #sendGroupMessage(GroupMessageEvent, String, String, String...)
-     * @see Database#delete(long, String, StringBuilder)
+     * @see Database#delete(Object, String, StringBuilder)
      */
     void processDelete(GroupMessageEvent g, String title) {
         if(!Security.checkTitle(uio, title)) {
@@ -475,11 +457,11 @@ public final class EntryLib extends JavaPlugin {
         Database db = new Database(); //新建数据库对象
 
         StringBuilder ErrorInfo = new StringBuilder(); //错误信息
-        boolean status;
 
         Subgroup subgroup = sgl.get(g.getGroup().getId());
-        if(subgroup == null) status = db.delete(g.getGroup().getId(), title, ErrorInfo);
-        else status = db.delete(subgroup, title, ErrorInfo);
+        Object name = ( subgroup == null ) ? g.getGroup().getId() : subgroup;
+
+        boolean status = db.delete(name, title, ErrorInfo);
 
         if(!status) {
             if(ErrorInfo.toString().contains("词条不存在")) sendGroupMessage(g,"delete", "exist", title); //未找到
@@ -497,32 +479,17 @@ public final class EntryLib extends JavaPlugin {
         Database db = new Database(); //新建数据库对象
 
         StringBuilder ErrorInfo = new StringBuilder(); //错误信息
-        boolean status;
         Subgroup subgroup = sgl.get(g.getGroup().getId());
-
-        if(subgroup == null)db.connect(g.getGroup().getId());
-        else db.connect(subgroup);
+        Object name = ( subgroup == null ) ? g.getGroup().getId() : subgroup;
 
         if(target == null) { //删除别名
-            int id = db.find_id(title);
-            if(id < 0) { //标题不存在
-                sendGroupMessage(g,"alias", "exist", title);
-                db.close();
-                return;
-            }
-            target = db.getAlias(id);
+            target = db.getAlias(name, title);
             if(target == null) { //别名目标不存在
                 sendGroupMessage(g,"alias", "exist", title);
-                db.close();
                 return;
             }
 
-            db.close();
-
-            if(subgroup == null) status = db.deleteAlias(g.getGroup().getId(), id, ErrorInfo);
-            else status = db.deleteAlias(subgroup, id, ErrorInfo);
-
-            if(status) sendGroupMessage(g, "alias", "deleted", title, target);
+            if(db.deleteAlias(name, title, ErrorInfo)) sendGroupMessage(g, "alias", "deleted", title, target);
             else {
                 sendGroupMessage(g,"alias","fail", title);
                 getLogger().warning(String.valueOf(ErrorInfo));
@@ -530,29 +497,14 @@ public final class EntryLib extends JavaPlugin {
             return;
         }
 
-        int targetId = db.find_id(target);
-        if(targetId < 0) {
-            sendGroupMessage(g,"alias", "error", title);
-            db.close();
-            return;
-        }
-        if(title.equals(target) || db.getAlias(targetId) != null) { //别名设置给了自己 或 目标存在别名
+        if(title.equals(target) || db.getAlias(name, target) != null) { //别名设置给了自己 或 目标存在别名
             sendGroupMessage(g,"alias", "reject", title);
-            db.close();
             return;
         }
 
-        db.close();
+        db.insert(name, title, "alias to " + target, type, priority, false, ErrorInfo); //添加一个词条
 
-        if(subgroup == null) {
-            db.insert(g.getGroup().getId(), title, "alias to " + target, type, priority, false, ErrorInfo); //添加一个词条
-            status = db.setAlias(g.getGroup().getId(), title, target, ErrorInfo); //设置别名
-        } else {
-            db.insert(subgroup, title, "alias to " + target, type, priority, false, ErrorInfo); //添加一个词条
-            status = db.setAlias(subgroup, title, target, ErrorInfo); //设置别名
-        }
-
-        if(!status) {
+        if(!db.setAlias(name, title, target, ErrorInfo)) { //设置别名
             sendGroupMessage(g, "alias", "fail", title);
             getLogger().warning(String.valueOf(ErrorInfo));
         } else sendGroupMessage(g,"alias", "done", title, target);
@@ -564,6 +516,33 @@ public final class EntryLib extends JavaPlugin {
      */
     public String getVersion() {
         return getDescription().getVersion().toString();
+    }
+
+    /**
+     * 从表达式中获取优先级
+     * @param input 表达式
+     * @return 优先级
+     */
+    int getPriority(String input) {
+        int priority;
+        String regex="[^0-9]";
+        Pattern p = Pattern.compile(regex);
+        Matcher m = p.matcher(input);
+        priority = Integer.parseInt(m.replaceAll("").trim());
+        if(priority > 5000) priority = 5000;
+        return priority;
+    }
+
+    /**
+     * 从表达式中获取模式
+     * @param input 表达式
+     * @return 模式
+     */
+    int getMode(String input) {
+        if(input.contains("精准")) return 0;
+        else if(input.contains("模糊")) return 1;
+        else if(input.contains("正则")) return 2;
+        else return 0;
     }
 
     /**
@@ -671,24 +650,11 @@ public final class EntryLib extends JavaPlugin {
 
                 int type = 0; //匹配方式
 
-                if(splitedMsg.length > 3) {
-                    String sType = splitedMsg[3];
-
-                    if(sType.contains("精准")) type = 0;
-                    else if(sType.contains("模糊")) type = 1;
-                    else if(sType.contains("正则")) type = 2;
-                }
+                if(splitedMsg.length > 3) type = getMode(splitedMsg[3]);
 
                 int priority = 2000; //优先级
 
-                if(splitedMsg.length > 4) {
-                    String sPriority = splitedMsg[4];
-                    String regex="[^0-9]";
-                    Pattern p = Pattern.compile(regex);
-                    Matcher m = p.matcher(sPriority);
-                    priority = Integer.parseInt(m.replaceAll("").trim());
-                    if(priority > 5000) priority = 5000;
-                }
+                if(splitedMsg.length > 4) priority = getPriority(splitedMsg[4]);
 
                 boolean random = uio.getRandomReply();
 
@@ -752,8 +718,6 @@ public final class EntryLib extends JavaPlugin {
 
             } else if(command.equals("alias")) { //别名类命令
 
-                if(splitedMsg.length < 2) return; //命令格式错误
-
                 String alias;
 
                 if(splitedMsg.length == 2) alias = null;
@@ -761,24 +725,11 @@ public final class EntryLib extends JavaPlugin {
 
                 int type = 0; //匹配方式
 
-                if(splitedMsg.length > 3) {
-                    String sType = splitedMsg[3];
-
-                    if(sType.contains("精准")) type = 0;
-                    else if(sType.contains("模糊")) type = 1;
-                    else if(sType.contains("正则")) type = 2;
-                }
+                if(splitedMsg.length > 3) type = getMode(splitedMsg[3]);
 
                 int priority = 2000; //优先级
 
-                if(splitedMsg.length > 4) {
-                    String sPriority = splitedMsg[4];
-                    String regex="[^0-9]";
-                    Pattern p = Pattern.compile(regex);
-                    Matcher m = p.matcher(sPriority);
-                    priority = Integer.parseInt(m.replaceAll("").trim());
-                    if(priority > 5000) priority = 5000;
-                }
+                if(splitedMsg.length > 4) priority = getPriority(splitedMsg[4]);
 
                 processAlias(g, splitedMsg[1], alias, type, priority);
 
