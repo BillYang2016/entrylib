@@ -1,6 +1,6 @@
 # 导航
 [返回主文档](https://github.com/BillYang2016/entrylib/blob/main/README.md)  
-[进阶用法文档（中文）]()  
+[进阶用法文档（中文）](https://github.com/BillYang2016/entrylib/blob/main/docs/advanced-CN.md)  
 
 # 目录
 - [安装方法](#安装方法)
