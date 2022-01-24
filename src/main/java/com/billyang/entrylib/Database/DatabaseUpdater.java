@@ -16,7 +16,7 @@ public class DatabaseUpdater {
     EntryLib entrylib;
     Database database;
 
-    static int VERSION = 1;
+    static int VERSION = 2;
 
     /**
      * 构造函数
@@ -103,6 +103,44 @@ public class DatabaseUpdater {
     }
 
     /**
+     * 从数据库版本1升级到版本2
+     */
+    public boolean v1tov2() {
+        if(!exists("__MAIN_TABLE", "ALIAS")) {
+            String sql = "ALTER TABLE __MAIN_TABLE ADD COLUMN ALIAS nvarchar(100) DEFAULT NULL;"; //添加列
+            try {
+                database.stmt.executeUpdate(sql);
+            } catch (SQLException e) {
+                e.printStackTrace();
+                return false;
+            }
+        }
+
+        if(!exists("__MAIN_TABLE", "RANDOM")) {
+            boolean defaultRandom = entrylib.uio.getRandomReply();
+            String sql = "ALTER TABLE __MAIN_TABLE ADD COLUMN RANDOM BOOLEAN DEFAULT " + ( defaultRandom ? 1 : 0 ) + ";"; //添加列
+            try {
+                database.stmt.executeUpdate(sql);
+            } catch (SQLException e) {
+                e.printStackTrace();
+                return false;
+            }
+        }
+
+        String sql1 = "DELETE FROM __VERSION;"; //删除原有记录
+        String sql2 = "INSERT INTO __VERSION (VERSION) VALUES (2);"; //添加版本号
+        try {
+            database.stmt.executeUpdate(sql1);
+            database.stmt.executeUpdate(sql2);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
      * 数据库升级任务
      */
     public void update() {
@@ -135,12 +173,15 @@ public class DatabaseUpdater {
                 continue;
             }
 
+            boolean success = false;
+
             for(int v = currentVersion; v < VERSION; v++) { //依次执行升级
                 try {
                     if(!((Boolean) this.getClass().getMethod("v" + v + "to" + "v" + (v + 1), new Class[]{}).invoke(this))) {
                         entrylib.getLogger().warning("数据库" + fileName + "：无法更新版本" + v + "to" + (v + 1) + "！");
                         break;
                     }
+                    success = true;
                 } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
                     entrylib.getLogger().warning("数据库" + fileName + "：无法更新版本" + v + "to" + (v + 1) + "！");
                     e.printStackTrace();
@@ -148,7 +189,7 @@ public class DatabaseUpdater {
                 }
             }
 
-            entrylib.getLogger().info("数据库" + fileName + "已为成功升级至版本v" + VERSION + "！");
+            if(success) entrylib.getLogger().info("数据库" + fileName + "已为成功升级至版本v" + VERSION + "！");
 
             database.close(); //关闭数据库
         }

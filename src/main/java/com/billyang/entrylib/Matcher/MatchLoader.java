@@ -79,30 +79,15 @@ public class MatchLoader {
     }
 
     /**
-     * 连接群数据库，返回根据词条名匹配到的一条信息
-     * @param groupID 群号
+     * 连接数据库，返回根据词条名匹配到的一条信息
+     * @param name 群号或群分组
      * @param title 词条名
      * @return 一个 MatchValue 对象
-     * @see #search(long, String)
+     * @see #search(Object, String)
      * @see MatchValue
      */
-    public MatchValue match(long groupID, String title) {
-        db.connect(groupID);
-
-        return match(title);
-    }
-
-    /**
-     * 连接群分组数据库，返回根据词条名匹配到的一条信息
-     * @param subgroup 群分组
-     * @param title 词条名
-     * @return 一个 MatchValue 对象
-     * @see #search(long, String)
-     * @see MatchValue
-     * @see Subgroup
-     */
-    public MatchValue match(Subgroup subgroup, String title) {
-        db.connect(subgroup);
+    public MatchValue match(Object name, String title) {
+        db.connect(name);
 
         return match(title);
     }
@@ -180,28 +165,14 @@ public class MatchLoader {
     }
 
     /**
-     * 连接群数据库，返回根据词条名匹配到的所有信息
-     * @param groupID 群号
+     * 连接数据库，返回根据词条名匹配到的所有信息
+     * @param name 群号或群分组
      * @param keyword 词条名
      * @return 一个 MatchValue 列表
      * @see MatchValue
      */
-    public List<MatchValue> search(long groupID, String keyword) {
-        db.connect(groupID);
-
-        return search(keyword, true);
-    }
-
-    /**
-     * 连接群分组数据库，返回根据词条名匹配到的所有信息
-     * @param subgroup 群分组
-     * @param keyword 词条名
-     * @return 一个 MatchValue 列表
-     * @see MatchValue
-     * @see Subgroup
-     */
-    public List<MatchValue> search(Subgroup subgroup, String keyword) {
-        db.connect(subgroup);
+    public List<MatchValue> search(Object name, String keyword) {
+        db.connect(name);
 
         return search(keyword, true);
     }
@@ -241,26 +212,13 @@ public class MatchLoader {
     }
 
     /**
-     * 连接群数据库，返回所有词条信息
-     * @param groupID 群号
+     * 连接数据库，返回所有词条信息
+     * @param name 群号或群分组
      * @return 一个 MatchValue 列表
      * @see MatchValue
      */
-    public List<MatchValue> all(long groupID) {
-        db.connect(groupID);
-
-        return all();
-    }
-
-    /**
-     * 连接群分组数据库，返回所有词条信息
-     * @param subgroup 群分组
-     * @return 一个 MatchValue 列表
-     * @see MatchValue
-     * @see Subgroup
-     */
-    public List<MatchValue> all(Subgroup subgroup) {
-        db.connect(subgroup);
+    public List<MatchValue> all(Object name) {
+        db.connect(name);
 
         return all();
     }
