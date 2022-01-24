@@ -1,6 +1,6 @@
 # 导航
 [返回主文档](https://github.com/BillYang2016/entrylib/blob/main/README.md)  
-[基础用法文档（中文）]()  
+[基础用法文档（中文）](https://github.com/BillYang2016/entrylib/blob/main/docs/basic-CN.md)  
 
 # 目录
 - [基本指令列表](#基本指令列表)
