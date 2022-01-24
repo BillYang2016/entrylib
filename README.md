@@ -2,7 +2,7 @@
 
 EntryLib 是一个基于 [Mirai-Console](https://github.com/mamoe/mirai-console) 的插件，用于实现群词条、自定义回复或更多功能。
 
-![version](https://img.shields.io/badge/%E5%BD%93%E5%89%8D%E7%89%88%E6%9C%AC-v1.3.0-informational)
+![version](https://img.shields.io/badge/%E5%BD%93%E5%89%8D%E7%89%88%E6%9C%AC-v1.3.1-informational)
 
 ![GitHub issues](https://img.shields.io/github/issues/BillYang2016/entrylib)
 ![GitHub stars](https://img.shields.io/github/stars/BillYang2016/entrylib)
@@ -127,6 +127,14 @@ EntryLib 是一个基于 [Mirai-Console](https://github.com/mamoe/mirai-console)
 8. 别名的随机回复模式将使用别名目标的随机回复模式
 9. 别名仅应用于查看，不应用于历史、搜索等功能
 
+## 帮助#[命令名]
+**作用：查询命令对应帮助**  
+*例：帮助#学习*
+### 格式说明
+1. 命令名为可选项，默认为默认帮助
+2. 若不填写命令名，也可以直接使用`帮助`作为命令
+3. 帮助的输出文本可以在[配置项](#配置项)中修改
+
 # 匹配顺序
 ## EntryLib 1.0.8 以下版本（已过时）
 若存在多个满足条件的词条，查看/历史类指令优先返回规则如下：
@@ -220,6 +228,7 @@ EntryLib 是一个基于 [Mirai-Console](https://github.com/mamoe/mirai-console)
 2. "view"中`$1`表示词条名，`$2`表示词条内容
 3. "(history,reply)"中`$1`表示词条名，`$2`表示词条历史，`$3/$4`表示 页码/总页数
 4. "(history,single)"表示单条历史格式，其中`$1`表示版本号，`$2`表示版本内容，`$3`表示修改时间
+5. "help"中的每一项都代表对应命令的帮助，"error"表示命令不存在或对应帮助不存在
 
 ## `admin.json`
 本配置项提供对管理员账号的配置
