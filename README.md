@@ -9,8 +9,8 @@ EntryLib 是一个基于 [Mirai-Console](https://github.com/mamoe/mirai-console)
 ![GitHub downloads](https://img.shields.io/github/downloads/BillYang2016/entrylib/total)
 
 # 说明文档
-[基础用法文档（中文）]()  
-[进阶用法文档（中文）]()  
+[基础用法文档（中文）](https://github.com/BillYang2016/entrylib/blob/main/docs/basic-CN.md)  
+[进阶用法文档（中文）](https://github.com/BillYang2016/entrylib/blob/main/docs/advanced-CN.md)  
 
 # 声明
 - 本插件仅作为学习交流等使用，请勿用于盈利，否则法律后果自负。
