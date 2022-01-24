@@ -143,7 +143,7 @@ public class Database {
      */
     public boolean connect(Object name) {
         if(name instanceof Subgroup)return connect((Subgroup) name);
-        else if(name instanceof Long)return connect((Long) name);
+        else if(name instanceof Long)return connect((long) name);
         else return false;
     }
 
