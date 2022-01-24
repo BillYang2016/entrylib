@@ -22,6 +22,17 @@ EntryLib 是一个基于 [Mirai-Console](https://github.com/mamoe/mirai-console)
 1. [#4. 请问如何才能让关键字触发的时候bot自动回复？](https://github.com/BillYang2016/entrylib/issues/4)
 2. 更多使用问题请查看 [Closed Issue](https://github.com/BillYang2016/entrylib/issues?q=is%3Aissue+is%3Aclosed)，这可以解决您 90% 的问题
 
+# 版本更新说明
+因为插件不会再加载默认的`input.json`即输入配置文件  
+故若有新命令加入请手动更新`input.json`  
+如：1.3.1加入帮助命令，需在文件中加入：
+```diff
+    "搜索":"search",
++   "别名":"alias",
+    "全部":"all",
++   "帮助":"help"
+```
+
 ## 可用 console 版本
 
 ### 0.5.2
