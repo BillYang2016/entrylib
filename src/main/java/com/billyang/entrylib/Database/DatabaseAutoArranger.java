@@ -358,6 +358,8 @@ public class DatabaseAutoArranger extends TimerTask {
                 return false;
             }
 
+            mex ++;
+
         }
 
         return true;

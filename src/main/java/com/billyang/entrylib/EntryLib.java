@@ -40,7 +40,7 @@ public final class EntryLib extends JavaPlugin {
     public static final String IMAGES_FOLDER = INSTANCE.getDataFolder().getAbsolutePath() + "/images/";
     public static final String DATABASES_FOLDER = INSTANCE.getDataFolder().getAbsolutePath() + "/databases/";
     private EntryLib() {
-        super(new JvmPluginDescriptionBuilder("EntryLib", "1.3.1")
+        super(new JvmPluginDescriptionBuilder("EntryLib", "1.3.2")
                 .id("com.billyang.entrylib")
                 .info("Ask and replay plugin for Mirai-Console")
                 .author("Bill Yang")

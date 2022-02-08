@@ -33,12 +33,12 @@ EntryLib 是一个基于 [Mirai-Console](https://github.com/mamoe/mirai-console)
 +   "帮助":"help"
 ```
 
-## 可用 console 版本
+# 可用 console 版本
 
-### 0.5.2
+## 0.5.2
 已停止维护，不保证可用性
 
-### 1.0
+## 1.0
 已停止维护，不保证可用性
 
 ### 2.x 系列

@@ -1,8 +1,6 @@
 package com.billyang.entrylib.MiraiCodeParser;
 
-import com.billyang.entrylib.Config.UserIO;
 import net.mamoe.mirai.contact.AudioSupported;
-import net.mamoe.mirai.contact.Contact;
 import net.mamoe.mirai.event.events.GroupMessageEvent;
 import net.mamoe.mirai.message.data.*;
 import net.mamoe.mirai.utils.ExternalResource;
