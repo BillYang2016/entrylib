@@ -440,10 +440,11 @@ public final class EntryLib extends JavaPlugin {
      * 向数据库请求删除词条
      * @param g 正在被处理的消息事件
      * @param title 即将被删除的词条名
+     * @param sId 特定版本 0表示全部
      * @see #sendGroupMessage(GroupMessageEvent, String, String, String...)
-     * @see Database#delete(Object, String, StringBuilder)
+     * @see Database#delete(Object, String, int, StringBuilder)
      */
-    void processDelete(GroupMessageEvent g, String title) {
+    void processDelete(GroupMessageEvent g, String title, int sId) {
         if(!Security.checkTitle(uio, title)) {
             sendGroupMessage(g,"delete", "reject", title);
             return;
@@ -461,13 +462,17 @@ public final class EntryLib extends JavaPlugin {
         Subgroup subgroup = sgl.get(g.getGroup().getId());
         Object name = ( subgroup == null ) ? g.getGroup().getId() : subgroup;
 
-        boolean status = db.delete(name, title, ErrorInfo);
+        boolean status = db.delete(name, title, sId, ErrorInfo);
 
         if(!status) {
             if(ErrorInfo.toString().contains("词条不存在")) sendGroupMessage(g,"delete", "exist", title); //未找到
+            else if(ErrorInfo.toString().contains("不存在版本为")) sendGroupMessage(g,"delete", "exist-specific", title, String.valueOf(sId)); //未找到版本
             else sendGroupMessage(g,"delete", "fail", title);
             getLogger().warning(String.valueOf(ErrorInfo));
-        } else sendGroupMessage(g,"delete", "done", title);
+        } else {
+            if(sId == 0) sendGroupMessage(g,"delete", "done", title);
+            else sendGroupMessage(g,"delete", "done-specific", title, String.valueOf(sId));
+        }
     }
 
     void processAlias(GroupMessageEvent g, String title, String target, int type, int priority) {
@@ -529,16 +534,24 @@ public final class EntryLib extends JavaPlugin {
     }
 
     /**
+     * 从字符串中提取数字
+     * @param text 字符串
+     * @return 数字
+     */
+    int getInt(String text) {
+        String regex="[^0-9]";
+        Pattern p = Pattern.compile(regex);
+        Matcher m = p.matcher(text);
+        return Integer.parseInt(m.replaceAll("").trim());
+    }
+
+    /**
      * 从表达式中获取优先级
      * @param input 表达式
      * @return 优先级
      */
     int getPriority(String input) {
-        int priority;
-        String regex="[^0-9]";
-        Pattern p = Pattern.compile(regex);
-        Matcher m = p.matcher(input);
-        priority = Integer.parseInt(m.replaceAll("").trim());
+        int priority = getInt(input);
         if(priority > 5000) priority = 5000;
         return priority;
     }
@@ -729,7 +742,17 @@ public final class EntryLib extends JavaPlugin {
 
             } else if(command.equals("delete")) { //删除类命令
 
-                processDelete(g, splitedMsg[1]);
+                int sId = 0;
+
+                if(splitedMsg.length > 2) {
+                    try { //尝试转换为数字
+                        sId = Integer.parseInt(splitedMsg[2].trim());
+                    } catch (Exception e) {
+                        //转换失败
+                    }
+                }
+
+                processDelete(g, splitedMsg[1], sId);
 
             } else if(command.equals("alias")) { //别名类命令
 

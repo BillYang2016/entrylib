@@ -67,7 +67,7 @@ public class PackageLoader {
                     for(QueryValue qv: pv.getHistory())db.insert(name, pv.getTitle(), qv.getContent(), pv.getMode(), pv.getPriority(), pv.getRandom(), ErrorInfo);
                     db.setAlias(name, pv.getTitle(), pv.getAlias(), ErrorInfo);
                 } else if(overwrite == 2) {
-                    db.delete(name, pv.getTitle(), ErrorInfo);
+                    db.delete(name, pv.getTitle(), 0, ErrorInfo);
                     for(QueryValue qv: pv.getHistory())db.insert(name, pv.getTitle(), qv.getContent(), pv.getMode(), pv.getPriority(), pv.getRandom(), ErrorInfo);
                     db.setAlias(name, pv.getTitle(), pv.getAlias(), ErrorInfo);
                 }

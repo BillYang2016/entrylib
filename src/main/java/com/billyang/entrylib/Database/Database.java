@@ -536,10 +536,11 @@ public class Database {
      * 保证已连接数据库
      * 返回错误信息
      * @param title 词条名
+     * @param sId 词条具体版本 0为删除全部
      * @param ErrorInfo 传递错误信息
      * @return 删除状态
      */
-    public boolean delete(String title, StringBuilder ErrorInfo) {
+    public boolean delete(String title, int sId, StringBuilder ErrorInfo) {
         if(c == null && stmt == null) return false;
 
         title = title.replace("'","''"); //单引号转义
@@ -555,7 +556,8 @@ public class Database {
             return false;
         }
 
-        return delete(id, ErrorInfo);
+        if(sId == 0) return delete(id, ErrorInfo);
+        else return deleteSpecific(id, sId, ErrorInfo);
     }
 
     /**
@@ -563,16 +565,17 @@ public class Database {
      * 返回错误信息
      * @param name 群号或群分组
      * @param title 词条名
+     * @param sId 特定版本 0表示全部
      * @param ErrorInfo 传递错误信息
      * @return 删除状态
      */
-    public boolean delete(Object name, String title, StringBuilder ErrorInfo) {
+    public boolean delete(Object name, String title, int sId, StringBuilder ErrorInfo) {
         if(!connect(name)) {
             ErrorInfo.append("数据库连接失败！");
             return false;
         }
 
-        return delete(title, ErrorInfo);
+        return delete(title, sId, ErrorInfo);
     }
 
     /**
@@ -700,13 +703,45 @@ public class Database {
         String table = "TABLE_" + id;
         int tableId = max_id(table);
 
+        return deleteSpecific(id, tableId, ErrorInfo);
+    }
+
+    /**
+     * 删除词条特定版本
+     * 返回错误信息
+     * @param id 词条ID
+     * @param sId 特定版本
+     * @param ErrorInfo 传递错误信息
+     * @return 删除状态
+     */
+    public boolean deleteSpecific(int id, int sId, StringBuilder ErrorInfo) {
+        if(c == null && stmt == null) return false;
+
+        String table = "TABLE_" + id;
+        int tableId = max_id(table);
+
+        if(tableId < sId || sId <= 0) {
+            ErrorInfo.append("不存在版本为").append(sId).append("的记录！");
+            close();
+            return false;
+        }
+
         if(tableId == 1) return delete(id, ErrorInfo); //仅有一条记录，删除整个表
         else {
             try {
-                String sql = "DELETE FROM " + table + " WHERE ID = " + tableId + ";"; //删除最新记录
+                String sql = "DELETE FROM " + table + " WHERE ID = " + sId + ";"; //删除最新记录
                 stmt.executeUpdate(sql);
             } catch( Exception e ) {
-                ErrorInfo.append("无法删除最新记录！");
+                ErrorInfo.append("无法删除记录！").append(table).append(" ID = ").append(sId);
+                e.printStackTrace();
+                close();
+                return false;
+            }
+            try {
+                String sql = "UPDATE " + table + " SET ID = ID - 1 WHERE ID > " + sId + ";"; //编号往前挪一位
+                stmt.executeUpdate(sql);
+            } catch( Exception e ) {
+                ErrorInfo.append("无法移动编号！").append(table).append(" ID = ").append(sId);
                 e.printStackTrace();
                 close();
                 return false;
