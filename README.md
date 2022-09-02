@@ -15,6 +15,7 @@ EntryLib 是一个基于 [Mirai-Console](https://github.com/mamoe/mirai-console)
 # 声明
 - 本插件仅作为学习交流等使用，请勿用于盈利，否则法律后果自负。
 - [欢迎加入~~原神~~交流群：735209171](https://jq.qq.com/?_wv=1027&k=5cV7uEJ)
+- 上面那个群群友ghs寄了，试试这个->444013223
 - 如果在使用插件过程中遇到任何问题，请发送 [Issues](https://github.com/BillYang2016/entrylib/issues) 询问
 - 插件开发初期，有许多期待完善之处，欢迎提交代码风格相似的 [PR](https://github.com/BillYang2016/entrylib/pulls)
 
